@@ -332,6 +332,7 @@
         </div>
       </div>
     </div>
+    <div id="deptPanel" style="margin-top:16px"></div>
     <div style="margin-top:10px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:12px 16px;font-size:.8rem;color:#1e40af">
       💡 รายการที่จัดการที่นี่จะอัปเดตใน SOP Builder อัตโนมัติ (ต้องเปิดใหม่หรือรีเฟรช Builder)
     </div>
@@ -922,6 +923,18 @@ function removeBranch(stepIdx,brIdx){
 }
 
 // ===== MASTER DATA (Roles & Tools) =====
+var DEFAULT_DEPTS=[
+  {id:'sales',label:'Sales',icon:'📊'},
+  {id:'it',label:'IT',icon:'💻'},
+  {id:'hr',label:'HR',icon:'👥'},
+  {id:'accounting',label:'Accounting',icon:'🧾'},
+  {id:'logistic',label:'Logistic',icon:'🚚'},
+  {id:'warehouse',label:'Warehouse',icon:'📦'},
+  {id:'graphic',label:'Graphic',icon:'🎨'},
+  {id:'general',label:'ทั่วไป',icon:'🏢'},
+];
+var masterDepts=[];
+
 var DEFAULT_ROLES=[
   {name:'Sales Officer',dept:'sales'},{name:'Sales Manager',dept:'sales'},
   {name:'IT Officer',dept:'it'},{name:'IT Manager',dept:'it'},
@@ -941,9 +954,9 @@ var masterRoles=[];
 var masterTools=[];
 
 function loadMasterData(){
+  if(!masterDepts.length) masterDepts=DEFAULT_DEPTS.map(function(d){return Object.assign({},d);});
   if(!masterRoles.length) masterRoles=DEFAULT_ROLES.map(function(r){return Object.assign({},r);});
   else masterRoles=masterRoles.map(function(r){
-    // backward compat: old format was plain string
     return typeof r==='string'?{name:r,dept:'general'}:r;
   });
   if(!masterTools.length) masterTools=DEFAULT_TOOLS.slice();
@@ -952,29 +965,24 @@ function loadMasterData(){
 function saveMasterData(){
   syncKey('master_roles',masterRoles);
   syncKey('master_tools',masterTools);
+  syncKey('departments',masterDepts);
 }
 
-var ADMIN_DEPTS=[
-  {id:'all',label:'ทั้งหมด',icon:'👥'},
-  {id:'sales',label:'Sales',icon:'📊'},
-  {id:'it',label:'IT',icon:'💻'},
-  {id:'hr',label:'HR',icon:'👥'},
-  {id:'accounting',label:'Accounting',icon:'🧾'},
-  {id:'logistic',label:'Logistic',icon:'🚚'},
-  {id:'warehouse',label:'Warehouse',icon:'📦'},
-  {id:'graphic',label:'Graphic',icon:'🎨'},
-  {id:'general',label:'ทั่วไป',icon:'🏢'},
-];
-var DEPT_SELECT_OPTS=ADMIN_DEPTS.filter(function(d){return d.id!=='all';}).map(function(d){
-  return '<option value="'+d.id+'">'+d.icon+' '+d.label+'</option>';
-}).join('');
+function getDeptSelectOpts(){
+  return masterDepts.map(function(d){
+    return '<option value="'+d.id+'">'+d.icon+' '+d.label+'</option>';
+  }).join('');
+}
+function getDeptById(id){return masterDepts.find(function(d){return d.id===id;})||{id:id,label:id,icon:'🏢'};}
 
 function setAdminRoleDept(d){adminRoleDept=d;renderAdminPanel();}
 
 function renderAdminPanel(){
+  var deptOpts=getDeptSelectOpts();
   // ===== ROLES PANEL =====
+  var allTabs=[{id:'all',label:'ทั้งหมด',icon:'👥'}].concat(masterDepts);
   var filtered=adminRoleDept==='all'?masterRoles:masterRoles.filter(function(r){return(r.dept||'general')===adminRoleDept;});
-  var tabsHTML=ADMIN_DEPTS.map(function(d){
+  var tabsHTML=allTabs.map(function(d){
     var cnt=d.id==='all'?masterRoles.length:masterRoles.filter(function(r){return(r.dept||'general')===d.id;}).length;
     var active=adminRoleDept===d.id;
     return '<div onclick="setAdminRoleDept(\''+d.id+'\')" style="padding:5px 10px;border-radius:20px;cursor:pointer;font-size:.72rem;font-weight:700;white-space:nowrap;'+(active?'background:#1a2b4a;color:white':'background:#f1f5f9;color:#64748b')+'">'+d.icon+' '+d.label+' ('+cnt+')</div>';
@@ -986,7 +994,7 @@ function renderAdminPanel(){
   } else {
     filtered.forEach(function(r){
       var i=masterRoles.indexOf(r);
-      var deptInfo=ADMIN_DEPTS.find(function(d){return d.id===(r.dept||'general');})||{icon:'🏢',label:'ทั่วไป'};
+      var deptInfo=getDeptById(r.dept||'general');
       rowsHTML+='<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border:1.5px solid #e2e8f0;border-radius:9px;margin-bottom:6px;background:#f8fafc" id="role-row-'+i+'">'+
         '<span style="font-size:.78rem;background:#f0f9ff;color:#0369a1;border:1px solid #bae6fd;border-radius:12px;padding:1px 7px;flex-shrink:0">'+deptInfo.icon+' '+deptInfo.label+'</span>'+
         '<span style="font-size:.88rem;flex:1;font-weight:600;color:#1e293b" id="role-txt-'+i+'">'+esc(r.name)+'</span>'+
@@ -996,7 +1004,6 @@ function renderAdminPanel(){
     });
   }
 
-  var defaultDept=adminRoleDept==='all'?'sales':adminRoleDept;
   document.getElementById('rolePanel').innerHTML=
     '<div style="background:white;border-radius:12px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,.07)">'+
       '<div style="font-size:.95rem;font-weight:800;color:#1a2b4a;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between">'+
@@ -1006,15 +1013,39 @@ function renderAdminPanel(){
       '<div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px">'+tabsHTML+'</div>'+
       '<div style="max-height:320px;overflow-y:auto">'+rowsHTML+'</div>'+
       '<div style="display:flex;gap:6px;margin-top:12px;padding-top:10px;border-top:1px solid #f1f5f9">'+
-        '<input id="newRoleName" placeholder="ชื่อตำแหน่ง เช่น Sales Officer" style="flex:1;min-width:0;padding:8px 10px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:.84rem;font-family:inherit;outline:none">'+
-        '<select id="newRoleDept" style="padding:8px 10px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:.8rem;font-family:inherit;outline:none;background:white">'+DEPT_SELECT_OPTS+'</select>'+
+        '<input id="newRoleName" placeholder="ชื่อตำแหน่ง" style="flex:1;min-width:0;padding:8px 10px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:.84rem;font-family:inherit;outline:none">'+
+        '<select id="newRoleDept" style="padding:8px 10px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:.8rem;font-family:inherit;outline:none;background:white">'+deptOpts+'</select>'+
         '<button onclick="addRole()" style="padding:8px 14px;background:#1a2b4a;color:white;border:none;border-radius:8px;font-size:.82rem;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">+ เพิ่ม</button>'+
       '</div>'+
     '</div>';
 
-  // pre-select dept in dropdown to match active tab
   var deptSel=document.getElementById('newRoleDept');
   if(deptSel&&adminRoleDept!=='all') deptSel.value=adminRoleDept;
+
+  // ===== DEPT PANEL =====
+  var deptRowsHTML='';
+  masterDepts.forEach(function(d,i){
+    deptRowsHTML+='<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border:1.5px solid #e2e8f0;border-radius:9px;margin-bottom:6px;background:#f8fafc" id="dept-row-'+i+'">'+
+      '<span style="font-size:1.2rem;width:28px;text-align:center">'+esc(d.icon)+'</span>'+
+      '<span style="font-size:.88rem;flex:1;font-weight:600;color:#1e293b">'+esc(d.label)+'</span>'+
+      '<span style="font-size:.72rem;color:#94a3b8;padding:2px 8px;background:#f1f5f9;border-radius:12px">'+masterRoles.filter(function(r){return(r.dept||'general')===d.id;}).length+' ตำแหน่ง</span>'+
+      '<button onclick="startEditDept('+i+')" style="padding:4px 10px;background:#eff6ff;color:#1e40af;border:1px solid #bfdbfe;border-radius:6px;font-size:.75rem;font-weight:700;cursor:pointer;font-family:inherit">แก้ไข</button>'+
+      '<button onclick="deleteDept('+i+')" style="padding:4px 10px;background:#fee2e2;color:#dc2626;border:1px solid #fecaca;border-radius:6px;font-size:.75rem;font-weight:700;cursor:pointer;font-family:inherit">ลบ</button>'+
+    '</div>';
+  });
+  document.getElementById('deptPanel').innerHTML=
+    '<div style="background:white;border-radius:12px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,.07)">'+
+      '<div style="font-size:.95rem;font-weight:800;color:#1a2b4a;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between">'+
+        '<span>🏢 จัดการแผนก</span>'+
+        '<span style="font-size:.72rem;color:#94a3b8;font-weight:400">'+masterDepts.length+' แผนก</span>'+
+      '</div>'+
+      '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px;margin-bottom:12px">'+deptRowsHTML+'</div>'+
+      '<div style="display:flex;gap:6px;padding-top:10px;border-top:1px solid #f1f5f9">'+
+        '<input id="newDeptIcon" placeholder="🏭" style="width:56px;padding:8px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:1.1rem;text-align:center;outline:none;font-family:inherit">'+
+        '<input id="newDeptLabel" placeholder="ชื่อแผนก เช่น Production" style="flex:1;padding:8px 10px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:.84rem;font-family:inherit;outline:none">'+
+        '<button onclick="addDept()" style="padding:8px 14px;background:#1a2b4a;color:white;border:none;border-radius:8px;font-size:.82rem;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">+ เพิ่ม</button>'+
+      '</div>'+
+    '</div>';
 
   // ===== TOOLS PANEL =====
   document.getElementById('toolCount').textContent=masterTools.length+' รายการ';
@@ -1055,7 +1086,7 @@ function startEditRole(i){
   var row=document.getElementById('role-row-'+i);
   var cur=masterRoles[i];
   row.innerHTML=
-    '<select id="edit-role-dept" style="padding:5px 8px;border:1.5px solid #2563eb;border-radius:7px;font-family:inherit;font-size:.8rem;outline:none">'+DEPT_SELECT_OPTS+'</select>'+
+    '<select id="edit-role-dept" style="padding:5px 8px;border:1.5px solid #2563eb;border-radius:7px;font-family:inherit;font-size:.8rem;outline:none">'+getDeptSelectOpts()+'</select>'+
     '<input id="edit-role-input" value="'+esc(cur.name)+'" style="flex:1;padding:6px 10px;border:1.5px solid #2563eb;border-radius:7px;font-family:inherit;font-size:.88rem;outline:none" onkeydown="if(event.key===\'Enter\')saveEditRole('+i+')">'+
     '<button onclick="saveEditRole('+i+')" style="padding:4px 10px;background:#1a2b4a;color:white;border:none;border-radius:6px;font-size:.75rem;font-weight:700;cursor:pointer;font-family:inherit">บันทึก</button>'+
     '<button onclick="renderAdminPanel()" style="padding:4px 10px;background:#f1f5f9;color:#374151;border:1.5px solid #e2e8f0;border-radius:6px;font-size:.75rem;font-weight:700;cursor:pointer;font-family:inherit">ยกเลิก</button>';
@@ -1068,6 +1099,56 @@ function saveEditRole(i){
   var d=document.getElementById('edit-role-dept').value||'general';
   if(!v)return;
   masterRoles[i]={name:v,dept:d};
+  saveMasterData();
+  renderAdminPanel();
+}
+
+// ===== DEPT CRUD =====
+function addDept(){
+  var icon=document.getElementById('newDeptIcon').value.trim()||'🏢';
+  var label=document.getElementById('newDeptLabel').value.trim();
+  if(!label)return;
+  var id=label.toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-ก-๙]/g,'');
+  if(!id)id='dept-'+Date.now();
+  if(masterDepts.find(function(d){return d.id===id||d.label===label;})){alert('"'+label+'" มีอยู่แล้ว');return;}
+  masterDepts.push({id:id,label:label,icon:icon});
+  saveMasterData();
+  document.getElementById('newDeptIcon').value='';
+  document.getElementById('newDeptLabel').value='';
+  renderAdminPanel();
+}
+
+function deleteDept(i){
+  var d=masterDepts[i];
+  var roleCount=masterRoles.filter(function(r){return(r.dept||'general')===d.id;}).length;
+  var msg='ลบแผนก "'+d.label+'"?';
+  if(roleCount) msg+='\n\nมี '+roleCount+' ตำแหน่งในแผนกนี้ จะถูกย้ายไป "ทั่วไป"';
+  if(!confirm(msg))return;
+  if(roleCount) masterRoles=masterRoles.map(function(r){
+    return (r.dept||'general')===d.id?Object.assign({},r,{dept:'general'}):r;
+  });
+  masterDepts.splice(i,1);
+  if(adminRoleDept===d.id) adminRoleDept='all';
+  saveMasterData();
+  renderAdminPanel();
+}
+
+function startEditDept(i){
+  var row=document.getElementById('dept-row-'+i);
+  var d=masterDepts[i];
+  row.innerHTML=
+    '<input id="edit-dept-icon" value="'+esc(d.icon)+'" style="width:48px;padding:5px;border:1.5px solid #2563eb;border-radius:7px;font-size:1.1rem;text-align:center;outline:none;font-family:inherit">'+
+    '<input id="edit-dept-label" value="'+esc(d.label)+'" style="flex:1;padding:6px 10px;border:1.5px solid #2563eb;border-radius:7px;font-family:inherit;font-size:.88rem;outline:none" onkeydown="if(event.key===\'Enter\')saveEditDept('+i+')">'+
+    '<button onclick="saveEditDept('+i+')" style="padding:4px 10px;background:#1a2b4a;color:white;border:none;border-radius:6px;font-size:.75rem;font-weight:700;cursor:pointer;font-family:inherit">บันทึก</button>'+
+    '<button onclick="renderAdminPanel()" style="padding:4px 10px;background:#f1f5f9;color:#374151;border:1.5px solid #e2e8f0;border-radius:6px;font-size:.75rem;font-weight:700;cursor:pointer;font-family:inherit">ยกเลิก</button>';
+  document.getElementById('edit-dept-label').focus();
+}
+
+function saveEditDept(i){
+  var icon=document.getElementById('edit-dept-icon').value.trim()||'🏢';
+  var label=document.getElementById('edit-dept-label').value.trim();
+  if(!label)return;
+  masterDepts[i]=Object.assign({},masterDepts[i],{label:label,icon:icon});
   saveMasterData();
   renderAdminPanel();
 }
@@ -1128,6 +1209,7 @@ async function loadFromSupabase(){
     if(map['flows']&&Array.isArray(map['flows']))flows=map['flows'];
     if(map['master_roles']&&Array.isArray(map['master_roles']))masterRoles=map['master_roles'];
     if(map['master_tools']&&Array.isArray(map['master_tools']))masterTools=map['master_tools'];
+    if(map['departments']&&Array.isArray(map['departments']))masterDepts=map['departments'];
   }catch(e){
     console.error('loadFromSupabase failed:',e);
     alert('❌ ไม่สามารถเชื่อมต่อ Supabase ได้\nกรุณาตรวจสอบ SUPABASE_URL และ SUPABASE_KEY ในไฟล์ HTML');
