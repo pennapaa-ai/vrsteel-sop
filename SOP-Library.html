@@ -196,6 +196,14 @@
     .add-branch-btn:hover{background:#eff6ff}
 
     @media print{.hdr,.main-tabs,.toolbar,.upload-zone,.flow-panel,.export-bar,.flow-steps-editor,.sop-selector-title,.sop-selector-grid{display:none!important}.flow-map-area{box-shadow:none;border:none}}
+    /* Emoji picker */
+    .emoji-picker{position:absolute;z-index:500;background:white;border:1.5px solid #e2e8f0;border-radius:12px;padding:10px;box-shadow:0 8px 24px rgba(0,0,0,.15);display:none;width:280px}
+    .emoji-picker.open{display:block}
+    .emoji-grid{display:flex;flex-wrap:wrap;gap:4px}
+    .emoji-btn{font-size:1.4rem;padding:4px;border:none;background:none;cursor:pointer;border-radius:6px;line-height:1;transition:background .1s}
+    .emoji-btn:hover{background:#f1f5f9}
+    .emoji-trigger{width:52px;height:40px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:1.3rem;cursor:pointer;background:#f8fafc;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:border-color .2s}
+    .emoji-trigger:hover{border-color:#93c5fd}
     /* Loading overlay */
     .loading-overlay{position:fixed;inset:0;background:rgba(255,255,255,.92);z-index:999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px}
     .loading-overlay.hidden{display:none}
@@ -387,6 +395,12 @@
       <button onclick="saveBranch()" style="flex:2;padding:11px;background:#2563eb;color:white;border:none;border-radius:9px;font-size:.88rem;font-weight:700;cursor:pointer;font-family:inherit">🔀 เพิ่มสาขา</button>
     </div>
   </div>
+</div>
+
+<!-- Emoji Picker -->
+<div id="emojiPicker" class="emoji-picker">
+  <div style="font-size:.72rem;font-weight:700;color:#64748b;margin-bottom:7px">เลือก Emoji</div>
+  <div class="emoji-grid" id="emojiGrid"></div>
 </div>
 
 <!-- Connector Label Modal -->
@@ -1041,7 +1055,8 @@ function renderAdminPanel(){
       '</div>'+
       '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px;margin-bottom:12px">'+deptRowsHTML+'</div>'+
       '<div style="display:flex;gap:6px;padding-top:10px;border-top:1px solid #f1f5f9">'+
-        '<input id="newDeptIcon" placeholder="🏭" style="width:56px;padding:8px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:1.1rem;text-align:center;outline:none;font-family:inherit">'+
+        '<input type="hidden" id="newDeptIcon" value="🏢">'+
+        '<button id="newDeptIcon-trigger" class="emoji-trigger" onclick="openEmojiPicker(\'newDeptIcon-trigger\',\'newDeptIcon\')" title="เลือก Emoji">🏢</button>'+
         '<input id="newDeptLabel" placeholder="ชื่อแผนก เช่น Production" style="flex:1;padding:8px 10px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:.84rem;font-family:inherit;outline:none">'+
         '<button onclick="addDept()" style="padding:8px 14px;background:#1a2b4a;color:white;border:none;border-radius:8px;font-size:.82rem;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">+ เพิ่ม</button>'+
       '</div>'+
@@ -1103,6 +1118,44 @@ function saveEditRole(i){
   renderAdminPanel();
 }
 
+// ===== EMOJI PICKER =====
+var DEPT_EMOJIS=['📊','📈','💻','🖥️','👥','👤','🧑‍💼','🧾','📋','📦','🚚','🚛','🏭','🏗️','🔧','⚙️','🛠️','🔨','🎨','🖌️','🏢','🏪','🏬','💰','💳','📐','🔬','🌐','📱','☎️','✈️','🚗','🏠','🌿','♻️','💡','🎓','📚','🎯','🔑','🏆','⭐','🌟','🔴','🟢','🔵','🟡','🟠','🟣','⚡','🔥','💎','🎪'];
+var _emojiTarget=null;
+
+function openEmojiPicker(triggerId,inputId){
+  _emojiTarget=inputId;
+  var trigger=document.getElementById(triggerId);
+  var picker=document.getElementById('emojiPicker');
+  var grid=document.getElementById('emojiGrid');
+  grid.innerHTML=DEPT_EMOJIS.map(function(e){
+    return '<button class="emoji-btn" onclick="pickEmoji(\''+e+'\')">'+e+'</button>';
+  }).join('');
+  // position near trigger
+  var rect=trigger.getBoundingClientRect();
+  picker.style.top=(rect.bottom+window.scrollY+6)+'px';
+  picker.style.left=Math.max(4,rect.left+window.scrollX)+'px';
+  picker.classList.add('open');
+}
+
+function pickEmoji(e){
+  if(_emojiTarget){
+    var inp=document.getElementById(_emojiTarget);
+    if(inp)inp.value=e;
+    // update trigger button display
+    var trigger=document.getElementById(_emojiTarget+'-trigger');
+    if(trigger)trigger.textContent=e;
+  }
+  document.getElementById('emojiPicker').classList.remove('open');
+  _emojiTarget=null;
+}
+
+document.addEventListener('click',function(ev){
+  var p=document.getElementById('emojiPicker');
+  if(p&&p.classList.contains('open')&&!p.contains(ev.target)&&!ev.target.classList.contains('emoji-trigger')){
+    p.classList.remove('open');
+  }
+});
+
 // ===== DEPT CRUD =====
 function addDept(){
   var icon=document.getElementById('newDeptIcon').value.trim()||'🏢';
@@ -1113,8 +1166,6 @@ function addDept(){
   if(masterDepts.find(function(d){return d.id===id||d.label===label;})){alert('"'+label+'" มีอยู่แล้ว');return;}
   masterDepts.push({id:id,label:label,icon:icon});
   saveMasterData();
-  document.getElementById('newDeptIcon').value='';
-  document.getElementById('newDeptLabel').value='';
   renderAdminPanel();
 }
 
@@ -1137,7 +1188,8 @@ function startEditDept(i){
   var row=document.getElementById('dept-row-'+i);
   var d=masterDepts[i];
   row.innerHTML=
-    '<input id="edit-dept-icon" value="'+esc(d.icon)+'" style="width:48px;padding:5px;border:1.5px solid #2563eb;border-radius:7px;font-size:1.1rem;text-align:center;outline:none;font-family:inherit">'+
+    '<input type="hidden" id="edit-dept-icon" value="'+esc(d.icon)+'">'+
+    '<button id="edit-dept-icon-trigger" class="emoji-trigger" onclick="openEmojiPicker(\'edit-dept-icon-trigger\',\'edit-dept-icon\')" title="เลือก Emoji">'+esc(d.icon)+'</button>'+
     '<input id="edit-dept-label" value="'+esc(d.label)+'" style="flex:1;padding:6px 10px;border:1.5px solid #2563eb;border-radius:7px;font-family:inherit;font-size:.88rem;outline:none" onkeydown="if(event.key===\'Enter\')saveEditDept('+i+')">'+
     '<button onclick="saveEditDept('+i+')" style="padding:4px 10px;background:#1a2b4a;color:white;border:none;border-radius:6px;font-size:.75rem;font-weight:700;cursor:pointer;font-family:inherit">บันทึก</button>'+
     '<button onclick="renderAdminPanel()" style="padding:4px 10px;background:#f1f5f9;color:#374151;border:1.5px solid #e2e8f0;border-radius:6px;font-size:.75rem;font-weight:700;cursor:pointer;font-family:inherit">ยกเลิก</button>';
