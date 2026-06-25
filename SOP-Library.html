@@ -7,6 +7,8 @@
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
     body{font-family:'IBM Plex Sans Thai','Segoe UI',Tahoma,sans-serif;background:#f0f4f8;color:#1e293b;min-height:100vh}
+    input,textarea,select,button{font-family:'IBM Plex Sans Thai','Segoe UI',Tahoma,sans-serif}
+    ::placeholder{font-family:'IBM Plex Sans Thai','Segoe UI',Tahoma,sans-serif}
     .app{max-width:1200px;margin:0 auto;padding:20px 16px 60px}
 
     /* Header */
@@ -24,13 +26,13 @@
     .mtab.active{background:#1a2b4a;color:white;box-shadow:0 2px 8px rgba(26,43,74,.3)}
 
     /* Upload zone */
-    .upload-zone{border:2px dashed #cbd5e1;border-radius:12px;padding:24px;text-align:center;background:white;cursor:pointer;transition:all .2s;margin-bottom:16px}
+    .upload-zone{border:2px dashed #cbd5e1;border-radius:12px;padding:28px 24px;text-align:center;background:white;cursor:pointer;transition:all .2s;margin-bottom:16px;display:block;width:100%}
     .upload-zone:hover,.upload-zone.drag{border-color:#3b82f6;background:#eff6ff}
     .upload-zone input{display:none}
-    .uz-icon{font-size:2rem;margin-bottom:8px}
-    .uz-title{font-size:.95rem;font-weight:700;color:#1a2b4a;margin-bottom:3px}
-    .uz-sub{font-size:.8rem;color:#64748b}
-    .uz-btn{display:inline-block;margin-top:12px;background:#1a2b4a;color:white;padding:8px 20px;border-radius:8px;font-size:.85rem;font-weight:700;cursor:pointer}
+    .uz-icon{font-size:2.2rem;margin-bottom:10px;display:block}
+    .uz-title{font-size:.95rem;font-weight:700;color:#1a2b4a;margin-bottom:4px;display:block}
+    .uz-sub{font-size:.8rem;color:#64748b;display:block}
+    .uz-btn{display:inline-block;margin-top:14px;background:#1a2b4a;color:white;padding:10px 24px;border-radius:8px;font-size:.85rem;font-weight:700;cursor:pointer}
 
     /* Toolbar */
     .toolbar{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
@@ -204,7 +206,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-<div id="loadingOverlay" class="loading-overlay">
+<div id="loadingOverlay" class="loading-overlay hidden">
   <div class="loading-spinner"></div>
   <div style="font-size:.88rem;font-weight:700;color:#64748b">กำลังโหลดข้อมูล...</div>
 </div>
@@ -1215,10 +1217,11 @@ function saveEditedSOP(){
 
 // ===== INIT =====
 async function initApp(){
-  document.getElementById('loadingOverlay').classList.remove('hidden');
+  var ov=document.getElementById('loadingOverlay');
+  ov.classList.remove('hidden');
   await loadFromSupabase();
-  loadMasterData(); // seed defaults if Supabase returned nothing
-  document.getElementById('loadingOverlay').classList.add('hidden');
+  loadMasterData();
+  ov.classList.add('hidden');
   refreshAll();
 }
 initApp();
