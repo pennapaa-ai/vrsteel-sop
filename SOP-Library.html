@@ -1,0 +1,1226 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SOP Library — VRSteel</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Segoe UI',Tahoma,sans-serif;background:#f0f4f8;color:#1e293b;min-height:100vh}
+    .app{max-width:1200px;margin:0 auto;padding:20px 16px 60px}
+
+    /* Header */
+    .hdr{background:linear-gradient(135deg,#1a2b4a,#2d4a7a);color:white;padding:18px 24px;border-radius:14px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+    .hdr-left{display:flex;align-items:center;gap:14px}
+    .hdr h1{font-size:1.2rem;font-weight:800}
+    .hdr p{font-size:.8rem;opacity:.75;margin-top:2px}
+    .hdr-stats{display:flex;gap:20px}
+    .stat .num{font-size:1.5rem;font-weight:900;line-height:1}
+    .stat .lbl{font-size:.7rem;opacity:.7;margin-top:2px}
+
+    /* Main tabs */
+    .main-tabs{display:flex;background:white;border-radius:12px;padding:4px;gap:3px;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+    .mtab{flex:1;padding:11px;text-align:center;border-radius:9px;cursor:pointer;font-size:.88rem;font-weight:700;color:#64748b;transition:all .2s}
+    .mtab.active{background:#1a2b4a;color:white;box-shadow:0 2px 8px rgba(26,43,74,.3)}
+
+    /* Upload zone */
+    .upload-zone{border:2px dashed #cbd5e1;border-radius:12px;padding:24px;text-align:center;background:white;cursor:pointer;transition:all .2s;margin-bottom:16px}
+    .upload-zone:hover,.upload-zone.drag{border-color:#3b82f6;background:#eff6ff}
+    .upload-zone input{display:none}
+    .uz-icon{font-size:2rem;margin-bottom:8px}
+    .uz-title{font-size:.95rem;font-weight:700;color:#1a2b4a;margin-bottom:3px}
+    .uz-sub{font-size:.8rem;color:#64748b}
+    .uz-btn{display:inline-block;margin-top:12px;background:#1a2b4a;color:white;padding:8px 20px;border-radius:8px;font-size:.85rem;font-weight:700;cursor:pointer}
+
+    /* Toolbar */
+    .toolbar{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
+    .search-wrap{flex:1;min-width:180px;position:relative}
+    .search-wrap input{width:100%;padding:10px 12px 10px 36px;border:1.5px solid #e2e8f0;border-radius:9px;font-size:.86rem;outline:none;background:white;transition:border-color .2s}
+    .search-wrap input:focus{border-color:#3b82f6}
+    .search-icon{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:#94a3b8;font-size:.9rem}
+    .filter-tabs{display:flex;gap:4px;flex-wrap:wrap}
+    .ftab{padding:7px 12px;border-radius:20px;border:1.5px solid #e2e8f0;background:white;font-size:.78rem;font-weight:600;color:#64748b;cursor:pointer;transition:all .18s;white-space:nowrap}
+    .ftab:hover{border-color:#93c5fd;color:#1e40af}
+    .ftab.active{background:#1a2b4a;color:white;border-color:#1a2b4a}
+    .sort-select{padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:9px;font-size:.82rem;font-family:inherit;outline:none;background:white;color:#374151;cursor:pointer}
+
+    /* SOP Grid */
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+    .sop-card{background:white;border-radius:12px;padding:18px;box-shadow:0 2px 8px rgba(0,0,0,.07);border:1.5px solid #e2e8f0;cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
+    .sop-card:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,.12);border-color:#93c5fd}
+    .sop-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;border-radius:12px 12px 0 0}
+    .dept-sales::before{background:#be123c}.dept-it::before{background:#0369a1}.dept-hr::before{background:#7c3aed}
+    .dept-accounting::before{background:#b45309}.dept-logistic::before{background:#047857}
+    .dept-warehouse::before{background:#1d4ed8}.dept-graphic::before{background:#9333ea}.dept-unknown::before{background:#64748b}
+    .card-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+    .dept-badge{display:flex;align-items:center;gap:5px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:20px;padding:2px 9px;font-size:.72rem;font-weight:600;color:#475569}
+    .card-del{background:none;border:none;cursor:pointer;color:#94a3b8;font-size:1rem;padding:2px 5px;border-radius:4px}
+    .card-del:hover{background:#fee2e2;color:#dc2626}
+    .card-title{font-size:.95rem;font-weight:800;color:#1a2b4a;margin-bottom:4px;line-height:1.4}
+    .card-owner{font-size:.75rem;color:#64748b;margin-bottom:10px}
+    .card-chips{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+    .cchip{font-size:.72rem;color:#64748b;display:flex;align-items:center;gap:3px}
+    .tool-chip{background:#f0f9ff;color:#0369a1;border:1px solid #bae6fd;border-radius:12px;padding:2px 7px;font-size:.7rem;margin:2px}
+    .card-footer{border-top:1px solid #f1f5f9;margin-top:10px;padding-top:8px;display:flex;justify-content:space-between;align-items:center}
+    .card-date{font-size:.72rem;color:#94a3b8}
+    .open-btn{background:#eff6ff;color:#1e40af;border:1px solid #bfdbfe;border-radius:6px;padding:4px 10px;font-size:.75rem;font-weight:700;cursor:pointer}
+    .open-btn:hover{background:#dbeafe}
+
+    /* Empty */
+    .empty{text-align:center;padding:50px 20px;color:#94a3b8}
+    .empty .em-icon{font-size:2.8rem;margin-bottom:12px}
+    .empty h3{font-size:.95rem;font-weight:700;color:#64748b;margin-bottom:5px}
+    .empty p{font-size:.82rem}
+
+    /* ===== FLOW BUILDER ===== */
+    .flow-layout{display:grid;grid-template-columns:320px 1fr;gap:16px;align-items:start}
+    @media(max-width:768px){.flow-layout{grid-template-columns:1fr}}
+
+    .flow-panel{background:white;border-radius:12px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,.07)}
+    .flow-panel-title{font-size:.95rem;font-weight:800;color:#1a2b4a;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between}
+
+    /* Flow list */
+    .flow-item{border:1.5px solid #e2e8f0;border-radius:10px;padding:12px 14px;margin-bottom:8px;cursor:pointer;transition:all .18s;display:flex;align-items:center;justify-content:space-between;gap:8px}
+    .flow-item:hover{border-color:#93c5fd;background:#f8fafc}
+    .flow-item.active{border-color:#2563eb;background:#eff6ff}
+    .flow-item-name{font-size:.9rem;font-weight:700;color:#1a2b4a}
+    .flow-item-meta{font-size:.74rem;color:#64748b;margin-top:2px}
+    .flow-del-btn{background:none;border:none;cursor:pointer;color:#94a3b8;font-size:.9rem;padding:3px 6px;border-radius:4px;flex-shrink:0}
+    .flow-del-btn:hover{background:#fee2e2;color:#dc2626}
+
+    .btn-new-flow{width:100%;padding:10px;border:1.5px dashed #93c5fd;background:#f0f9ff;color:#0369a1;border-radius:9px;font-size:.85rem;font-weight:700;cursor:pointer;font-family:inherit;margin-top:4px;transition:all .15s}
+    .btn-new-flow:hover{background:#e0f2fe}
+
+    /* Flow editor */
+    .flow-editor{background:white;border-radius:12px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,.07)}
+    .flow-editor-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:300px;color:#94a3b8;text-align:center}
+
+    .flow-name-input{width:100%;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:9px;font-size:1rem;font-weight:700;font-family:inherit;outline:none;color:#1a2b4a;margin-bottom:16px}
+    .flow-name-input:focus{border-color:#2563eb}
+
+    /* Flow steps list (in editor) */
+    .flow-steps-editor{margin-bottom:16px}
+    .fstep{display:flex;align-items:center;gap:0;margin-bottom:0}
+    .fstep-node{background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:10px;padding:10px 14px;flex:1;display:flex;align-items:center;gap:10px;position:relative}
+    .fstep-num{background:#1a2b4a;color:white;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:800;flex-shrink:0}
+    .fstep-info{flex:1;min-width:0}
+    .fstep-name{font-size:.88rem;font-weight:700;color:#1a2b4a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .fstep-dept{font-size:.72rem;color:#64748b}
+    .fstep-btns{display:flex;gap:4px;flex-shrink:0}
+    .fstep-btn{background:none;border:none;cursor:pointer;color:#94a3b8;font-size:.85rem;padding:4px;border-radius:4px;transition:all .15s}
+    .fstep-btn:hover{background:#f1f5f9;color:#374151}
+    .fstep-btn.del:hover{background:#fee2e2;color:#dc2626}
+
+    /* Connector between steps */
+    .fstep-connector{display:flex;flex-direction:column;align-items:center;margin:4px 0;padding:0 8px}
+    .connector-line{width:2px;height:10px;background:#cbd5e1}
+    .connector-arrow{color:#cbd5e1;font-size:1rem;line-height:1}
+    .connector-label-wrap{display:flex;align-items:center;gap:6px;margin:2px 0}
+    .connector-label{border:1px solid #e2e8f0;border-radius:20px;padding:3px 10px;font-size:.72rem;color:#64748b;background:white;cursor:pointer;transition:all .15s;min-width:60px;text-align:center}
+    .connector-label:hover{border-color:#93c5fd;color:#1e40af}
+    .connector-label.has-text{background:#eff6ff;border-color:#bfdbfe;color:#1e40af;font-weight:600}
+
+    /* SOP selector in editor */
+    .sop-selector-title{font-size:.82rem;font-weight:700;color:#64748b;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+    .sop-selector-grid{max-height:220px;overflow-y:auto;border:1.5px solid #e2e8f0;border-radius:9px;padding:8px}
+    .sop-sel-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:7px;cursor:pointer;transition:all .15s;border:1.5px solid transparent}
+    .sop-sel-item:hover{background:#eff6ff;border-color:#bfdbfe}
+    .sop-sel-item .si-icon{font-size:1.2rem;flex-shrink:0}
+    .sop-sel-item .si-name{font-size:.82rem;font-weight:600;color:#1a2b4a}
+    .sop-sel-item .si-dept{font-size:.72rem;color:#64748b}
+    .no-sop-msg{text-align:center;padding:20px;color:#94a3b8;font-size:.82rem}
+
+    /* ===== FLOW MAP VISUAL ===== */
+    .flow-map-area{background:white;border-radius:12px;padding:24px;box-shadow:0 2px 8px rgba(0,0,0,.07);overflow-x:auto}
+    .flow-map-empty{text-align:center;padding:50px;color:#94a3b8}
+
+    /* Horizontal flow */
+    .flow-viz{display:flex;align-items:center;gap:0;padding:16px 0;min-width:max-content}
+    .viz-node{display:flex;flex-direction:column;align-items:center;width:180px;flex-shrink:0}
+    .viz-card{width:160px;border-radius:12px;padding:14px 12px;border:2px solid;text-align:center;position:relative;box-shadow:0 2px 8px rgba(0,0,0,.1);transition:all .2s;cursor:pointer}
+    .viz-card:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,0,0,.15)}
+    .viz-dept-icon{font-size:1.6rem;margin-bottom:6px}
+    .viz-sop-name{font-size:.78rem;font-weight:800;line-height:1.3}
+    .viz-dept-name{font-size:.66rem;margin-top:4px;opacity:.75}
+    .viz-step-num{position:absolute;top:-10px;left:50%;transform:translateX(-50%);width:22px;height:22px;border-radius:50%;background:#1a2b4a;color:white;font-size:.7rem;font-weight:800;display:flex;align-items:center;justify-content:center}
+
+    /* Colors for viz cards */
+    .vc-sales{background:#fff1f2;border-color:#fda4af;color:#9f1239}
+    .vc-it{background:#eff6ff;border-color:#93c5fd;color:#1e40af}
+    .vc-hr{background:#fdf4ff;border-color:#d8b4fe;color:#6b21a8}
+    .vc-accounting{background:#fffbeb;border-color:#fde68a;color:#92400e}
+    .vc-logistic{background:#f0fdf4;border-color:#86efac;color:#14532d}
+    .vc-warehouse{background:#eff6ff;border-color:#93c5fd;color:#1e3a8a}
+    .vc-graphic{background:#fdf4ff;border-color:#d8b4fe;color:#581c87}
+    .vc-unknown{background:#f8fafc;border-color:#cbd5e1;color:#475569}
+
+    /* Arrow between nodes */
+    .viz-arrow{display:flex;flex-direction:column;align-items:center;width:80px;flex-shrink:0;padding-top:8px}
+    .arrow-line{width:50px;height:2px;background:#cbd5e1;position:relative}
+    .arrow-head{color:#94a3b8;font-size:1.2rem;margin-left:-6px}
+    .arrow-label{font-size:.65rem;color:#1e40af;background:#eff6ff;border:1px solid #bfdbfe;border-radius:12px;padding:2px 7px;margin-bottom:6px;text-align:center;max-width:90px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+    /* Export flow */
+    .export-bar{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
+    .export-btn{padding:9px 18px;border-radius:8px;border:1.5px solid #e2e8f0;background:#f8fafc;color:#374151;font-size:.82rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s;display:flex;align-items:center;gap:6px}
+    .export-btn:hover{background:#f1f5f9}
+    .export-btn.primary{background:#1a2b4a;color:white;border-color:#1a2b4a}
+    .export-btn.primary:hover{background:#253d6a}
+
+    /* Modal */
+    .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:flex-end;justify-content:center}
+    .modal-bg.open{display:flex}
+    .modal{background:white;border-radius:20px 20px 0 0;padding:24px;width:100%;max-width:680px;max-height:85vh;overflow-y:auto}
+    .modal-title{font-size:1rem;font-weight:800;color:#1a2b4a;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid #f1f5f9}
+    .modal-close{background:#f1f5f9;border:none;border-radius:50%;width:30px;height:30px;cursor:pointer;font-size:1rem;float:right}
+    .sop-detail h2{font-size:.88rem;font-weight:800;color:#1e40af;background:#eff6ff;padding:5px 10px;border-radius:5px;margin-top:14px;margin-bottom:7px;border-left:3px solid #2563eb}
+    .sop-detail p{font-size:.84rem;color:#374151;line-height:1.6}
+    .sop-detail table{width:100%;border-collapse:collapse;font-size:.8rem;margin-top:6px}
+    .sop-detail th{background:#1a2b4a;color:white;padding:6px 8px;text-align:left}
+    .sop-detail td{border:1px solid #e2e8f0;padding:6px 8px;vertical-align:top}
+    .sop-detail tr:nth-child(even) td{background:#f8fafc}
+    .ttag{display:inline-block;background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0;border-radius:20px;padding:2px 8px;font-size:.72rem;margin:2px}
+    .badge-dec{display:inline-block;background:#fffbeb;color:#b45309;font-size:.75rem;padding:2px 7px;border-radius:4px;margin-top:3px;border:1px solid #fde68a}
+
+    /* Connector label edit inline */
+    .connector-input{border:1px solid #bfdbfe;border-radius:20px;padding:3px 10px;font-size:.72rem;color:#1e40af;background:white;outline:none;min-width:100px;font-family:inherit;text-align:center}
+
+    @media(max-width:600px){.hdr-stats{display:none}.grid{grid-template-columns:1fr}#adminGrid{grid-template-columns:1fr}}
+    /* Branch items in editor */
+    .fbranch-item{display:flex;align-items:center;gap:6px;padding:5px 8px 5px 36px;font-size:.79rem;color:#1e40af;background:#eff6ff;border:1px dashed #bfdbfe;border-radius:7px;margin-top:4px}
+    .fbranch-item .fbr-label{background:#dbeafe;border:1px solid #bfdbfe;border-radius:12px;padding:1px 7px;font-size:.7rem;font-weight:700;white-space:nowrap}
+    .fbranch-item .fbr-name{flex:1;font-weight:600;color:#1a2b4a}
+    .add-branch-btn{border:1px dashed #2563eb;background:transparent;color:#2563eb;border-radius:6px;padding:4px 12px;font-size:.74rem;font-weight:700;cursor:pointer;font-family:inherit;margin-top:5px;margin-left:36px}
+    .add-branch-btn:hover{background:#eff6ff}
+
+    @media print{.hdr,.main-tabs,.toolbar,.upload-zone,.flow-panel,.export-bar,.flow-steps-editor,.sop-selector-title,.sop-selector-grid{display:none!important}.flow-map-area{box-shadow:none;border:none}}
+    /* Loading overlay */
+    .loading-overlay{position:fixed;inset:0;background:rgba(255,255,255,.92);z-index:999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px}
+    .loading-overlay.hidden{display:none}
+    .loading-spinner{width:40px;height:40px;border:4px solid #e2e8f0;border-top-color:#1a2b4a;border-radius:50%;animation:spin .8s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<div id="loadingOverlay" class="loading-overlay">
+  <div class="loading-spinner"></div>
+  <div style="font-size:.88rem;font-weight:700;color:#64748b">กำลังโหลดข้อมูล...</div>
+</div>
+<div class="app">
+  <div class="hdr">
+    <div class="hdr-left">
+      <div style="font-size:2rem">📚</div>
+      <div>
+        <h1>SOP Library — VRSteel</h1>
+        <p>คลัง SOP ทุกแผนก และ Flow Builder สำหรับ Admin</p>
+      </div>
+    </div>
+    <div class="hdr-stats">
+      <div class="stat"><div class="num" id="totalCount">0</div><div class="lbl">SOP</div></div>
+      <div class="stat"><div class="num" id="flowCount">0</div><div class="lbl">Flow</div></div>
+    </div>
+  </div>
+
+  <!-- Main Tabs -->
+  <div class="main-tabs">
+    <div class="mtab active" id="mt-library" onclick="switchMainTab('library')">📚 คลัง SOP</div>
+    <div class="mtab" id="mt-flows" onclick="switchMainTab('flows')">🔗 Flow Builder <span style="font-size:.7rem;background:#dc2626;color:white;padding:1px 6px;border-radius:20px;margin-left:4px">Admin</span></div>
+    <div class="mtab" id="mt-admin" onclick="switchMainTab('admin')">⚙️ จัดการข้อมูล <span style="font-size:.7rem;background:#dc2626;color:white;padding:1px 6px;border-radius:20px;margin-left:4px">Admin</span></div>
+  </div>
+
+  <!-- LIBRARY TAB -->
+  <div id="tab-library">
+    <label class="upload-zone" id="dropZone">
+      <input type="file" id="fileInput" multiple accept=".html">
+      <div class="uz-icon">📂</div>
+      <div class="uz-title">โหลดไฟล์ SOP ที่ Export จาก SOP Builder</div>
+      <div class="uz-sub">ลาก & วางไฟล์ หรือคลิกเพื่อเลือก (รองรับหลายไฟล์พร้อมกัน)</div>
+      <div class="uz-btn">เลือกไฟล์ SOP</div>
+    </label>
+    <div class="toolbar">
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="searchInput" placeholder="ค้นหา SOP, แผนก, เจ้าของ...">
+      </div>
+      <div class="filter-tabs" id="filterTabs">
+        <div class="ftab active" onclick="setDept('all')">ทั้งหมด</div>
+      </div>
+      <select class="sort-select" id="sortSelect">
+        <option value="date-desc">ใหม่สุด</option>
+        <option value="date-asc">เก่าสุด</option>
+        <option value="name-asc">ชื่อ A→Z</option>
+        <option value="steps-desc">ขั้นตอนมากสุด</option>
+      </select>
+    </div>
+    <div id="gridArea"></div>
+  </div>
+
+  <!-- FLOW BUILDER TAB -->
+  <div id="tab-flows" style="display:none">
+    <div class="flow-layout">
+      <!-- Left: Flow list -->
+      <div class="flow-panel">
+        <div class="flow-panel-title">
+          <span>🔗 Flows ทั้งหมด</span>
+          <span style="font-size:.72rem;color:#94a3b8;font-weight:400" id="flowCountLabel">0 flows</span>
+        </div>
+        <div id="flowList"></div>
+        <button class="btn-new-flow" onclick="createNewFlow()">+ สร้าง Flow ใหม่</button>
+        <div style="margin-top:16px;padding-top:14px;border-top:1px solid #f1f5f9">
+          <div style="font-size:.75rem;font-weight:700;color:#64748b;margin-bottom:8px">เพิ่ม SOP ที่ยังไม่มีไฟล์</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px">
+            <input type="text" id="manualSopName" placeholder="ชื่อ SOP" style="flex:1;min-width:120px;padding:7px 10px;border:1.5px solid #e2e8f0;border-radius:7px;font-size:.8rem;font-family:inherit;outline:none">
+            <select id="manualSopDept" style="padding:7px 10px;border:1.5px solid #e2e8f0;border-radius:7px;font-size:.78rem;font-family:inherit;outline:none;background:white">
+              <option value="sales">📊 Sales</option>
+              <option value="it">💻 IT</option>
+              <option value="hr">👥 HR</option>
+              <option value="accounting">🧾 Accounting</option>
+              <option value="logistic">🚚 Logistic</option>
+              <option value="warehouse">📦 Warehouse</option>
+              <option value="graphic">🎨 Graphic</option>
+            </select>
+          </div>
+          <button onclick="addManualSOP()" style="width:100%;padding:7px;border:1.5px solid #bbf7d0;background:#f0fdf4;color:#15803d;border-radius:7px;font-size:.8rem;font-weight:700;cursor:pointer;font-family:inherit">+ เพิ่ม SOP นี้ใน Flow ที่เลือก</button>
+        </div>
+      </div>
+
+      <!-- Right: Flow editor + map -->
+      <div>
+        <div class="flow-editor" id="flowEditor">
+          <div class="flow-editor-empty">
+            <div style="font-size:2.5rem;margin-bottom:12px">🔗</div>
+            <div style="font-size:.9rem;font-weight:700;color:#64748b">เลือก Flow หรือสร้าง Flow ใหม่</div>
+            <div style="font-size:.8rem;color:#94a3b8;margin-top:4px">จากแถบด้านซ้าย</div>
+          </div>
+        </div>
+
+        <!-- Flow Map Visual -->
+        <div class="flow-map-area" id="flowMapArea" style="margin-top:16px;display:none">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+            <div style="font-weight:800;color:#1a2b4a;font-size:1rem" id="flowMapTitle"></div>
+            <div class="export-bar" style="margin-top:0">
+              <button class="export-btn" onclick="window.print()">🖨️ Print Flow</button>
+              <button class="export-btn primary" onclick="saveFlowHTML()">💾 Export Flow</button>
+            </div>
+          </div>
+          <div id="flowViz" style="overflow-x:auto;padding-bottom:8px"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+  <!-- ADMIN TAB -->
+  <div id="tab-admin" style="display:none">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px" id="adminGrid">
+      <!-- Roles panel -->
+      <div style="background:white;border-radius:12px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,.07)">
+        <div style="font-size:.95rem;font-weight:800;color:#1a2b4a;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between">
+          <span>👤 ผู้รับผิดชอบ</span>
+          <span id="roleCount" style="font-size:.72rem;color:#94a3b8;font-weight:400"></span>
+        </div>
+        <div id="roleList"></div>
+        <div style="display:flex;gap:6px;margin-top:10px">
+          <input id="newRoleName" placeholder="ชื่อตำแหน่ง เช่น Sales Officer" style="flex:1;padding:8px 10px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:.84rem;font-family:inherit;outline:none">
+          <button onclick="addRole()" style="padding:8px 14px;background:#1a2b4a;color:white;border:none;border-radius:8px;font-size:.82rem;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">+ เพิ่ม</button>
+        </div>
+      </div>
+      <!-- Tools panel -->
+      <div style="background:white;border-radius:12px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,.07)">
+        <div style="font-size:.95rem;font-weight:800;color:#1a2b4a;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between">
+          <span>🔧 เครื่องมือ / ระบบ</span>
+          <span id="toolCount" style="font-size:.72rem;color:#94a3b8;font-weight:400"></span>
+        </div>
+        <div id="toolList"></div>
+        <div style="display:flex;gap:6px;margin-top:10px">
+          <input id="newToolName" placeholder="ชื่อเครื่องมือ เช่น Bplus ERP" style="flex:1;padding:8px 10px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:.84rem;font-family:inherit;outline:none">
+          <button onclick="addTool()" style="padding:8px 14px;background:#1a2b4a;color:white;border:none;border-radius:8px;font-size:.82rem;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">+ เพิ่ม</button>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:10px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:12px 16px;font-size:.8rem;color:#1e40af">
+      💡 รายการที่จัดการที่นี่จะอัปเดตใน SOP Builder อัตโนมัติ (ต้องเปิดใหม่หรือรีเฟรช Builder)
+    </div>
+  </div>
+</div>
+
+<!-- SOP Detail Modal -->
+<div class="modal-bg" id="sopModal" onclick="if(event.target===this)closeSopModal()">
+  <div class="modal">
+    <button class="modal-close" onclick="closeSopModal()">✕</button>
+    <div class="modal-title" id="modalTitle"></div>
+    <div class="sop-detail" id="modalBody"></div>
+  </div>
+</div>
+
+<!-- Edit SOP Modal -->
+<div class="modal-bg" id="editModal" onclick="if(event.target===this)closeEditModal()">
+  <div class="modal">
+    <button class="modal-close" onclick="closeEditModal()">✕</button>
+    <div class="modal-title">✏️ แก้ไข SOP</div>
+    <div id="editForm" style="padding-bottom:4px"></div>
+    <div style="display:flex;gap:8px;margin-top:14px;padding-top:12px;border-top:1px solid #f1f5f9;position:sticky;bottom:0;background:white">
+      <button onclick="closeEditModal()" style="flex:1;padding:12px;border:1.5px solid #e2e8f0;background:#f1f5f9;border-radius:9px;font-size:.9rem;font-weight:700;cursor:pointer;font-family:inherit">ยกเลิก</button>
+      <button onclick="saveEditedSOP()" style="flex:2;padding:12px;background:#1a2b4a;color:white;border:none;border-radius:9px;font-size:.9rem;font-weight:700;cursor:pointer;font-family:inherit">💾 บันทึกการแก้ไข</button>
+    </div>
+  </div>
+</div>
+
+<!-- Branch Add Modal -->
+<div class="modal-bg" id="branchModal" onclick="if(event.target===this)closeBranchModal()">
+  <div class="modal">
+    <div class="modal-title">🔀 เพิ่มสาขา (Branch)</div>
+    <div style="font-size:.82rem;color:#64748b;margin-bottom:12px">ระบุเงื่อนไขและ SOP ที่ต้องทำในสาขานี้</div>
+    <div style="margin-bottom:12px">
+      <label style="display:block;font-size:.8rem;font-weight:700;color:#374151;margin-bottom:5px">เงื่อนไข (ถ้า… / เมื่อ…)</label>
+      <input id="branchLabelInput" type="text" placeholder="เช่น เมื่อยกเลิก, เมื่อไม่ผ่านเกณฑ์, กรณีฉุกเฉิน"
+        style="width:100%;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:9px;font-size:.9rem;font-family:inherit;outline:none">
+    </div>
+    <div style="font-size:.8rem;font-weight:700;color:#374151;margin-bottom:6px">SOP ปลายทาง</div>
+    <div id="branchSopFromLib" style="max-height:140px;overflow-y:auto;border:1.5px solid #e2e8f0;border-radius:9px;padding:6px;margin-bottom:8px"></div>
+    <div style="font-size:.74rem;color:#94a3b8;margin-bottom:6px;text-align:center">— หรือกรอกเองด้านล่าง —</div>
+    <div style="display:flex;gap:6px;margin-bottom:14px">
+      <input id="branchSopInput" placeholder="ชื่อ SOP" style="flex:1;padding:9px 10px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:.84rem;font-family:inherit;outline:none">
+      <select id="branchDeptInput" style="padding:9px 10px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:.8rem;font-family:inherit;outline:none;background:white">
+        <option value="sales">📊 Sales</option><option value="it">💻 IT</option><option value="hr">👥 HR</option>
+        <option value="accounting">🧾 Accounting</option><option value="logistic">🚚 Logistic</option>
+        <option value="warehouse">📦 Warehouse</option><option value="graphic">🎨 Graphic</option>
+      </select>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button onclick="closeBranchModal()" style="flex:1;padding:11px;border:1.5px solid #e2e8f0;background:#f1f5f9;border-radius:9px;font-size:.88rem;font-weight:700;cursor:pointer;font-family:inherit">ยกเลิก</button>
+      <button onclick="saveBranch()" style="flex:2;padding:11px;background:#2563eb;color:white;border:none;border-radius:9px;font-size:.88rem;font-weight:700;cursor:pointer;font-family:inherit">🔀 เพิ่มสาขา</button>
+    </div>
+  </div>
+</div>
+
+<!-- Connector Label Modal -->
+<div class="modal-bg" id="connModal" onclick="if(event.target===this)closeConnModal()">
+  <div class="modal" style="border-radius:16px;max-height:auto">
+    <div class="modal-title">กำหนด Trigger / เงื่อนไขเชื่อมต่อ</div>
+    <div style="font-size:.84rem;color:#64748b;margin-bottom:12px">ระบุว่าอะไรทำให้ต้องไปทำ SOP ถัดไป</div>
+    <input type="text" id="connLabelInput" placeholder="เช่น เมื่อลูกค้า Confirm, เมื่อจัดส่งแล้ว, เมื่อ Stock พร้อม"
+      style="width:100%;padding:12px 14px;border:1.5px solid #e2e8f0;border-radius:9px;font-size:.9rem;font-family:inherit;outline:none;margin-bottom:14px"
+      onkeydown="if(event.key==='Enter')saveConnLabel()">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+      <span onclick="setConnPreset(this.textContent)" style="background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af;border-radius:20px;padding:4px 10px;font-size:.75rem;cursor:pointer">เมื่อลูกค้า Confirm</span>
+      <span onclick="setConnPreset(this.textContent)" style="background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af;border-radius:20px;padding:4px 10px;font-size:.75rem;cursor:pointer">เมื่อจัดส่งสำเร็จ</span>
+      <span onclick="setConnPreset(this.textContent)" style="background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af;border-radius:20px;padding:4px 10px;font-size:.75rem;cursor:pointer">เมื่อ Stock พร้อม</span>
+      <span onclick="setConnPreset(this.textContent)" style="background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af;border-radius:20px;padding:4px 10px;font-size:.75rem;cursor:pointer">เมื่อรับเงินแล้ว</span>
+      <span onclick="setConnPreset(this.textContent)" style="background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af;border-radius:20px;padding:4px 10px;font-size:.75rem;cursor:pointer">เมื่อได้รับอนุมัติ</span>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button onclick="closeConnModal()" style="flex:1;padding:11px;border:1.5px solid #e2e8f0;background:#f1f5f9;border-radius:9px;font-size:.88rem;font-weight:700;cursor:pointer;font-family:inherit">ยกเลิก</button>
+      <button onclick="saveConnLabel()" style="flex:2;padding:11px;background:#1a2b4a;color:white;border:none;border-radius:9px;font-size:.88rem;font-weight:700;cursor:pointer;font-family:inherit">✅ บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== SUPABASE CONFIG =====
+// แก้ค่า 2 บรรทัดนี้ด้วย URL และ Key จาก Supabase → Settings → API
+var SUPABASE_URL = 'https://xfdihndkfptrrutzagfy.supabase.co';
+var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhmZGlobmRrZnB0cnJ1dHphZ2Z5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzNjkyMjAsImV4cCI6MjA5Nzk0NTIyMH0.dAV3D2mYY7NAtPIObSy8gHljSbpaOaUV_aRm3wihiCM';
+var sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ===== STATE =====
+var sopList = [];
+var flows = [];
+var activeDept = 'all';
+var searchQuery = '';
+var sortBy = 'date-desc';
+var activeMainTab = 'library';
+var selectedFlowId = null;
+var editingConnIdx = -1;
+
+const DEPT_MAP = {
+  sales:{name:'Sales & Marketing',icon:'📊'},it:{name:'IT',icon:'💻'},hr:{name:'HR',icon:'👥'},
+  accounting:{name:'Accounting',icon:'🧾'},logistic:{name:'Logistic',icon:'🚚'},
+  warehouse:{name:'Warehouse',icon:'📦'},graphic:{name:'Graphic Design',icon:'🎨'},
+};
+
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+
+// ===== MAIN TAB =====
+function switchMainTab(tab){
+  activeMainTab=tab;
+  document.getElementById('tab-library').style.display=tab==='library'?'':'none';
+  document.getElementById('tab-flows').style.display=tab==='flows'?'':'none';
+  document.getElementById('tab-admin').style.display=tab==='admin'?'':'none';
+  document.getElementById('mt-library').className='mtab'+(tab==='library'?' active':'');
+  document.getElementById('mt-flows').className='mtab'+(tab==='flows'?' active':'');
+  document.getElementById('mt-admin').className='mtab'+(tab==='admin'?' active':'');
+  if(tab==='flows') renderFlowPanel();
+  if(tab==='admin') renderAdminPanel();
+}
+
+// ===== FILE LOADING =====
+document.getElementById('fileInput').addEventListener('change',function(e){loadFiles(e.target.files);this.value='';});
+var dz=document.getElementById('dropZone');
+dz.addEventListener('dragover',function(e){e.preventDefault();dz.classList.add('drag');});
+dz.addEventListener('dragleave',function(){dz.classList.remove('drag');});
+dz.addEventListener('drop',function(e){e.preventDefault();dz.classList.remove('drag');loadFiles(e.dataTransfer.files);});
+
+function loadFiles(files){
+  Array.from(files).forEach(function(f){
+    if(!f.name.endsWith('.html'))return;
+    var r=new FileReader();
+    r.onload=function(e){
+      var d=parseSOP(e.target.result,f.name);
+      if(!d)return;
+      var idx=sopList.findIndex(function(s){return s.processName===d.processName&&s.department===d.department;});
+      if(idx>=0)sopList[idx]=d; else sopList.push(d);
+      syncKey('sops',sopList);
+      refreshAll();
+    };
+    r.readAsText(f,'utf-8');
+  });
+}
+
+function parseSOP(html,fname){
+  try{
+    var m=html.match(/<script[^>]+id="sop-data"[^>]*>([\s\S]*?)<\/script>/);
+    if(!m)return null;
+    var d=JSON.parse(m[1]);
+    d._filename=fname;
+    return d;
+  }catch(e){console.warn('parse fail:',fname,e);return null;}
+}
+
+// ===== LIBRARY =====
+function refreshAll(){
+  document.getElementById('totalCount').textContent=sopList.length;
+  document.getElementById('flowCount').textContent=flows.length;
+  updateFilterTabs();
+  renderGrid();
+  if(activeMainTab==='flows') renderFlowPanel();
+}
+
+function updateFilterTabs(){
+  var depts={};
+  sopList.forEach(function(s){depts[s.department||'unknown']=(depts[s.department||'unknown']||0)+1;});
+  var html='<div class="ftab'+(activeDept==='all'?' active':'')+'" onclick="setDept(\'all\')">ทั้งหมด ('+sopList.length+')</div>';
+  Object.keys(depts).forEach(function(k){
+    var info=DEPT_MAP[k]||{name:k,icon:'📋'};
+    html+='<div class="ftab'+(activeDept===k?' active':'')+'" onclick="setDept(\''+k+'\')">'+info.icon+' '+info.name+' ('+depts[k]+')</div>';
+  });
+  document.getElementById('filterTabs').innerHTML=html;
+}
+
+function setDept(d){activeDept=d;updateFilterTabs();renderGrid();}
+document.getElementById('searchInput').addEventListener('input',function(){searchQuery=this.value.toLowerCase();renderGrid();});
+document.getElementById('sortSelect').addEventListener('change',function(){sortBy=this.value;renderGrid();});
+
+function getFiltered(){
+  return sopList.filter(function(s){
+    if(activeDept!=='all'&&s.department!==activeDept)return false;
+    if(searchQuery){
+      var hay=[s.processName,s.processOwner,s.purpose,s.departmentName,(s.roles||[]).map(function(r){return r.role}).join(' '),(s.tools||[]).join(' ')].join(' ').toLowerCase();
+      if(!hay.includes(searchQuery))return false;
+    }
+    return true;
+  }).sort(function(a,b){
+    if(sortBy==='date-desc')return new Date(b.exportedAt||0)-new Date(a.exportedAt||0);
+    if(sortBy==='date-asc')return new Date(a.exportedAt||0)-new Date(b.exportedAt||0);
+    if(sortBy==='name-asc')return(a.processName||'').localeCompare(b.processName||'');
+    if(sortBy==='steps-desc')return(b.steps||[]).length-(a.steps||[]).length;
+    return 0;
+  });
+}
+
+function renderGrid(){
+  var list=getFiltered();
+  var el=document.getElementById('gridArea');
+  if(!list.length){
+    el.innerHTML='<div class="empty"><div class="em-icon">'+(sopList.length?'🔍':'📂')+'</div><h3>'+(sopList.length?'ไม่พบ SOP ที่ตรงกัน':'ยังไม่มี SOP ในคลัง')+'</h3><p>'+(sopList.length?'ลองเปลี่ยน filter':'โหลดไฟล์ SOP จาก SOP Builder ด้านบน')+'</p></div>';
+    return;
+  }
+  el.innerHTML='<div class="grid">'+list.map(function(s){return renderCard(s);}).join('')+'</div>';
+}
+
+function renderCard(s){
+  var dept=DEPT_MAP[s.department]||{name:s.departmentName||'-',icon:'📋'};
+  var deptClass='dept-'+(s.department||'unknown');
+  var steps=(s.steps||[]).filter(function(st){return st.action;});
+  var tools=(s.tools||[]).filter(function(t){return t;}).slice(0,3);
+  var date=s.exportedAt?new Date(s.exportedAt).toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'2-digit'}):'-';
+  var ridx=sopList.indexOf(s);
+  return '<div class="sop-card '+deptClass+'" onclick="openSopModal('+ridx+')">' +
+    '<div class="card-header"><div class="dept-badge">'+dept.icon+' '+esc(dept.name)+'</div><button class="card-del" onclick="removeSOP(event,'+ridx+')" title="ลบ">✕</button></div>' +
+    '<div class="card-title">'+esc(s.processName)+'</div>' +
+    '<div class="card-owner">👤 '+esc(s.processOwner||'-')+' | v'+esc(s.version||'1.0')+'</div>' +
+    '<div class="card-chips"><span class="cchip">📋 '+steps.length+' ขั้นตอน</span><span class="cchip">👥 '+(s.roles||[]).filter(function(r){return r.role;}).length+' บทบาท</span></div>' +
+    (tools.length?'<div>'+tools.map(function(t){return'<span class="tool-chip">'+esc(t)+'</span>';}).join('')+'</div>':'') +
+    '<div class="card-footer"><div class="card-date">'+date+'</div><div style="display:flex;gap:5px"><button class="open-btn" onclick="event.stopPropagation();openEditModal('+ridx+')" style="background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0">✏️ แก้ไข</button><button class="open-btn" onclick="openSopModal('+ridx+')">ดู SOP →</button></div></div>' +
+  '</div>';
+}
+
+function removeSOP(e,idx){e.stopPropagation();if(confirm('ลบ SOP "'+sopList[idx].processName+'" ออก?')){sopList.splice(idx,1);saveToStorage();refreshAll();}}
+
+// ===== SOP MODAL =====
+function openSopModal(idx){
+  var s=sopList[idx];if(!s)return;
+  var dept=DEPT_MAP[s.department]||{name:s.departmentName||'-',icon:'📋'};
+  document.getElementById('modalTitle').textContent=dept.icon+' '+s.processName;
+  document.getElementById('modalBody').innerHTML=buildSOPDetail(s,dept);
+  document.getElementById('sopModal').classList.add('open');
+}
+function closeSopModal(){document.getElementById('sopModal').classList.remove('open');}
+
+function buildSOPDetail(s,dept){
+  var tools=(s.tools||[]).filter(function(t){return t;});
+  var roles=(s.roles||[]).filter(function(r){return r.role;});
+  var steps=(s.steps||[]).filter(function(st){return st.action;});
+  var issues=(s.issues||[]).filter(function(i){return i.problem;});
+  var h='';
+  if(s.purpose)h+='<h2>วัตถุประสงค์</h2><p>'+esc(s.purpose)+'</p>';
+  if(s.trigger)h+='<h2>Trigger</h2><p>'+esc(s.trigger)+'</p>';
+  if(roles.length)h+='<h2>ผู้เกี่ยวข้อง</h2><table><tr><th>Role</th><th>หน้าที่</th></tr>'+roles.map(function(r){return'<tr><td><b>'+esc(r.role)+'</b></td><td>'+esc(r.description||'-')+'</td></tr>';}).join('')+'</table>';
+  if(tools.length)h+='<h2>เครื่องมือ</h2><p>'+tools.map(function(t){return'<span class="ttag">'+esc(t)+'</span>';}).join('')+'</p>';
+  if(steps.length)h+='<h2>ขั้นตอน</h2><table><tr><th>#</th><th>การดำเนินการ</th><th>ผู้รับผิดชอบ</th><th>เครื่องมือ</th><th>Output</th></tr>'+steps.map(function(st,i){return'<tr><td style="text-align:center;font-weight:800">'+(i+1)+'</td><td>'+esc(st.action)+(st.decision?'<div class="badge-dec">🔀 '+esc(st.decision)+'</div>':'')+'</td><td>'+esc(st.role||'-')+'</td><td>'+esc(st.tool||'-')+'</td><td>'+esc(st.output||'-')+'</td></tr>';}).join('')+'</table>';
+  if(issues.length)h+='<h2>ปัญหาที่พบบ่อย</h2><table><tr><th>ปัญหา</th><th>วิธีแก้</th></tr>'+issues.map(function(i){return'<tr><td>'+esc(i.problem)+'</td><td>'+esc(i.solution||'-')+'</td></tr>';}).join('')+'</table>';
+  return h;
+}
+
+// ===== FLOW BUILDER =====
+function getSelectedFlow(){return flows.find(function(f){return f.id===selectedFlowId;})||null;}
+
+function createNewFlow(){
+  var name=prompt('ชื่อ Flow เช่น "Sales End-to-End", "กระบวนการขายและจัดส่ง"');
+  if(!name||!name.trim())return;
+  var f={id:'flow-'+Date.now(),name:name.trim(),steps:[],createdAt:new Date().toISOString()};
+  flows.push(f);
+  selectedFlowId=f.id;
+  document.getElementById('flowCount').textContent=flows.length;
+  saveToStorage();
+  renderFlowPanel();
+}
+
+function renderFlowPanel(){
+  // Flow list
+  document.getElementById('flowCountLabel').textContent=flows.length+' flows';
+  if(!flows.length){
+    document.getElementById('flowList').innerHTML='<div style="text-align:center;padding:20px;color:#94a3b8;font-size:.82rem">ยังไม่มี Flow — กดสร้างด้านล่าง</div>';
+  } else {
+    document.getElementById('flowList').innerHTML=flows.map(function(f){
+      return '<div class="flow-item'+(f.id===selectedFlowId?' active':'')+'" onclick="selectFlow(\''+f.id+'\')">' +
+        '<div style="flex:1;min-width:0"><div class="flow-item-name">'+esc(f.name)+'</div><div class="flow-item-meta">'+f.steps.length+' SOPs</div></div>' +
+        '<button class="flow-del-btn" onclick="deleteFlow(event,\''+f.id+'\')">🗑️</button>' +
+      '</div>';
+    }).join('');
+  }
+
+  // Editor
+  var f=getSelectedFlow();
+  if(!f){
+    document.getElementById('flowEditor').innerHTML='<div class="flow-editor-empty"><div style="font-size:2.5rem;margin-bottom:12px">🔗</div><div style="font-size:.9rem;font-weight:700;color:#64748b">เลือก Flow หรือสร้าง Flow ใหม่จากด้านซ้าย</div></div>';
+    document.getElementById('flowMapArea').style.display='none';
+    return;
+  }
+
+  // Build editor HTML
+  var stepsHTML='<div class="flow-steps-editor">';
+  if(!f.steps.length){
+    stepsHTML+='<div style="text-align:center;padding:24px;color:#94a3b8;border:2px dashed #e2e8f0;border-radius:10px;font-size:.84rem">ยังไม่มี SOP ใน Flow นี้<br>เลือก SOP จากด้านล่าง</div>';
+  } else {
+    f.steps.forEach(function(st,i){
+      var dept=DEPT_MAP[st.dept]||{icon:'📋'};
+      // Connector above (except first)
+      if(i>0){
+        var prevLabel=f.steps[i].trigger||'';
+        stepsHTML+='<div class="fstep-connector">' +
+          '<div class="connector-line"></div>' +
+          '<div class="connector-label-wrap">' +
+            '<span class="connector-label'+(prevLabel?' has-text':'')+'" onclick="editConnLabel('+i+')" title="คลิกเพื่อเพิ่ม trigger">'+(prevLabel||'+ trigger')+'</span>' +
+          '</div>' +
+          '<div class="connector-arrow">↓</div>' +
+        '</div>';
+      }
+      stepsHTML+='<div class="fstep"><div class="fstep-node">' +
+        '<div class="fstep-num">'+(i+1)+'</div>' +
+        '<div class="fstep-info"><div class="fstep-name">'+dept.icon+' '+esc(st.sopName)+'</div><div class="fstep-dept">'+esc((DEPT_MAP[st.dept]||{name:st.dept}).name)+'</div></div>' +
+        '<div class="fstep-btns">' +
+          (i>0?'<button class="fstep-btn" onclick="moveStep('+i+',-1)" title="ขึ้น">↑</button>':'') +
+          (i<f.steps.length-1?'<button class="fstep-btn" onclick="moveStep('+i+',1)" title="ลง">↓</button>':'') +
+          '<button class="fstep-btn del" onclick="removeFlowStep('+i+')" title="ลบ">✕</button>' +
+        '</div>' +
+      '</div></div>';
+      // Branches
+      (st.branches||[]).forEach(function(br,bi){
+        var bdept=DEPT_MAP[br.dept]||{icon:'📋'};
+        stepsHTML+='<div class="fbranch-item">'+
+          '<span style="color:#2563eb;font-size:.85rem">↳</span>'+
+          (br.label?'<span class="fbr-label">'+esc(br.label)+'</span>':'')+
+          '<span class="fbr-name">'+bdept.icon+' '+esc(br.sopName)+'</span>'+
+          '<button class="fstep-btn del" onclick="removeBranch('+i+','+bi+')" title="ลบสาขา" style="flex-shrink:0;font-size:.7rem">✕</button>'+
+        '</div>';
+      });
+      stepsHTML+='<button class="add-branch-btn" onclick="showAddBranchModal('+i+')">🔀 เพิ่มสาขา</button>';
+    });
+  }
+  stepsHTML+='</div>';
+
+  // SOP selector
+  var availSOPs=sopList.filter(function(s){return s.processName;});
+  var sopSelectorHTML='<div class="sop-selector-title">📌 เลือก SOP เพิ่มใน Flow<span style="font-weight:400;margin-left:4px">(จากไฟล์ที่โหลดแล้ว)</span></div>' +
+    '<div class="sop-selector-grid">';
+  if(!availSOPs.length){
+    sopSelectorHTML+='<div class="no-sop-msg">โหลดไฟล์ SOP ในแท็บ "คลัง SOP" ก่อน<br>หรือใช้ช่อง "เพิ่ม SOP ที่ยังไม่มีไฟล์" ด้านซ้าย</div>';
+  } else {
+    sopSelectorHTML+=availSOPs.map(function(s,i){
+      var dept=DEPT_MAP[s.department]||{icon:'📋',name:s.departmentName||'-'};
+      return '<div class="sop-sel-item" onclick="addSOPToFlow('+sopList.indexOf(s)+')">' +
+        '<div class="si-icon">'+dept.icon+'</div>' +
+        '<div><div class="si-name">'+esc(s.processName)+'</div><div class="si-dept">'+dept.name+'</div></div>' +
+      '</div>';
+    }).join('');
+  }
+  sopSelectorHTML+='</div>';
+
+  document.getElementById('flowEditor').innerHTML=
+    '<div style="font-weight:800;color:#1a2b4a;font-size:1rem;margin-bottom:12px">✏️ '+esc(f.name)+'</div>' +
+    stepsHTML + sopSelectorHTML;
+
+  // Update map
+  renderFlowMap(f);
+}
+
+function selectFlow(id){selectedFlowId=id;renderFlowPanel();}
+function deleteFlow(e,id){
+  e.stopPropagation();
+  var f=flows.find(function(x){return x.id===id;});
+  if(!f||!confirm('ลบ Flow "'+f.name+'"?'))return;
+  flows=flows.filter(function(x){return x.id!==id;});
+  if(selectedFlowId===id)selectedFlowId=flows.length?flows[0].id:null;
+  document.getElementById('flowCount').textContent=flows.length;
+  saveToStorage();
+  renderFlowPanel();
+}
+
+function addSOPToFlow(sopIdx){
+  var f=getSelectedFlow();if(!f)return;
+  var s=sopList[sopIdx];if(!s)return;
+  var dept=DEPT_MAP[s.department]||{icon:'📋',name:s.departmentName||s.department||'-'};
+  f.steps.push({sopId:s.processName+'_'+s.department,sopName:s.processName,dept:s.department,deptIcon:dept.icon,trigger:''});
+  saveToStorage();
+  renderFlowPanel();
+}
+
+function addManualSOP(){
+  var f=getSelectedFlow();
+  var name=document.getElementById('manualSopName').value.trim();
+  var dept=document.getElementById('manualSopDept').value;
+  if(!f){alert('กรุณาเลือก Flow ก่อน');return;}
+  if(!name){alert('กรุณากรอกชื่อ SOP');return;}
+  var info=DEPT_MAP[dept]||{icon:'📋'};
+  f.steps.push({sopId:name+'_'+dept,sopName:name,dept:dept,deptIcon:info.icon,trigger:''});
+  document.getElementById('manualSopName').value='';
+  renderFlowPanel();
+}
+
+function removeFlowStep(idx){
+  var f=getSelectedFlow();if(!f)return;
+  f.steps.splice(idx,1);
+  renderFlowPanel();
+}
+
+function moveStep(idx,dir){
+  var f=getSelectedFlow();if(!f)return;
+  var ni=idx+dir;
+  if(ni<0||ni>=f.steps.length)return;
+  var tmp=f.steps[idx];f.steps[idx]=f.steps[ni];f.steps[ni]=tmp;
+  renderFlowPanel();
+}
+
+// ===== CONNECTOR LABELS =====
+function editConnLabel(idx){
+  editingConnIdx=idx;
+  var f=getSelectedFlow();
+  document.getElementById('connLabelInput').value=f?f.steps[idx].trigger||'':'';
+  document.getElementById('connModal').classList.add('open');
+  setTimeout(function(){document.getElementById('connLabelInput').focus();},100);
+}
+function closeConnModal(){document.getElementById('connModal').classList.remove('open');}
+function setConnPreset(text){document.getElementById('connLabelInput').value=text;}
+function saveConnLabel(){
+  var f=getSelectedFlow();
+  if(f&&editingConnIdx>=0){f.steps[editingConnIdx].trigger=document.getElementById('connLabelInput').value.trim();}
+  saveToStorage();
+  closeConnModal();renderFlowPanel();
+}
+
+// ===== FLOW MAP VISUALIZATION (SVG, supports branching) =====
+function renderFlowMap(f){
+  var area=document.getElementById('flowMapArea');
+  if(!f||!f.steps.length){area.style.display='none';return;}
+  area.style.display='';
+  document.getElementById('flowMapTitle').textContent='🗺️ '+f.name;
+
+  var NW=160,NH=80,MAIN_GAP=36,BR_XGAP=70,BR_YGAP=14,PAD=20;
+
+  // Calculate row heights & positions
+  var stepRows=[];var curY=PAD;
+  f.steps.forEach(function(s,i){
+    var brs=s.branches||[];
+    var brTotalH=brs.length?brs.length*(NH+BR_YGAP)-BR_YGAP:0;
+    var rowH=Math.max(NH,brTotalH);
+    var mainY=curY+(rowH-NH)/2;
+    var brStartY=curY+(rowH-brTotalH)/2;
+    stepRows.push({mainY:mainY,rowH:rowH,brStartY:brStartY,brs:brs});
+    curY+=rowH+(i<f.steps.length-1?MAIN_GAP:0);
+  });
+  var totalH=curY+PAD;
+  var hasBranches=f.steps.some(function(s){return(s.branches||[]).length>0;});
+  var totalW=hasBranches?(PAD+NW+BR_XGAP+NW+PAD):(PAD+NW+PAD);
+
+  // Build node divs
+  var nodesHTML='';
+  f.steps.forEach(function(s,i){
+    var r=stepRows[i];
+    var dept=DEPT_MAP[s.dept]||{name:s.dept||'',icon:'📋'};
+    var vc='vc-'+(s.dept||'unknown');
+    var numBadge='<div style="position:absolute;top:-11px;left:50%;transform:translateX(-50%);width:22px;height:22px;border-radius:50%;background:#1a2b4a;color:white;font-size:.7rem;font-weight:800;display:flex;align-items:center;justify-content:center;z-index:2">'+(i+1)+'</div>';
+    nodesHTML+='<div class="viz-card '+vc+'" style="position:absolute;left:'+PAD+'px;top:'+r.mainY+'px;width:'+NW+'px;height:'+NH+'px;cursor:pointer" onclick="openFlowNodeDetail(\''+esc(s.sopId||'')+'\',\''+esc(s.dept||'')+'\')">'
+      +numBadge+'<div class="viz-dept-icon">'+(s.deptIcon||dept.icon)+'</div>'
+      +'<div class="viz-sop-name">'+esc(s.sopName.length>20?s.sopName.substring(0,19)+'…':s.sopName)+'</div>'
+      +'<div class="viz-dept-name">'+esc(dept.name)+'</div></div>';
+    r.brs.forEach(function(br,bi){
+      var by=r.brStartY+bi*(NH+BR_YGAP);
+      var bx=PAD+NW+BR_XGAP;
+      var bdept=DEPT_MAP[br.dept]||{name:br.dept||'',icon:'📋'};
+      var bvc='vc-'+(br.dept||'unknown');
+      nodesHTML+='<div class="viz-card '+bvc+'" style="position:absolute;left:'+bx+'px;top:'+by+'px;width:'+NW+'px;height:'+NH+'px">'
+        +'<div class="viz-dept-icon">'+(br.deptIcon||bdept.icon)+'</div>'
+        +'<div class="viz-sop-name">'+esc(br.sopName.length>20?br.sopName.substring(0,19)+'…':br.sopName)+'</div>'
+        +'<div class="viz-dept-name">'+esc(bdept.name)+'</div></div>';
+    });
+  });
+
+  // Build SVG arrows
+  var svg='<svg xmlns="http://www.w3.org/2000/svg" style="position:absolute;top:0;left:0;pointer-events:none" width="'+totalW+'" height="'+totalH+'">';
+  svg+='<defs>'
+    +'<marker id="arM" viewBox="0 0 10 6" refX="9" refY="3" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,3 L0,6 z" fill="#94a3b8"/></marker>'
+    +'<marker id="arB" viewBox="0 0 10 6" refX="9" refY="3" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,3 L0,6 z" fill="#2563eb"/></marker>'
+    +'</defs>';
+  // Main flow vertical arrows
+  f.steps.forEach(function(s,i){
+    if(i<f.steps.length-1){
+      var mx=PAD+NW/2;
+      var y1=stepRows[i].mainY+NH,y2=stepRows[i+1].mainY;
+      var lbl=f.steps[i+1].trigger||'';
+      svg+='<line x1="'+mx+'" y1="'+y1+'" x2="'+mx+'" y2="'+(y2-6)+'" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arM)"/>';
+      if(lbl){var ly=(y1+y2)/2;svg+='<rect x="'+(mx-32)+'" y="'+(ly-9)+'" width="64" height="16" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/><text x="'+mx+'" y="'+(ly+4)+'" text-anchor="middle" font-size="9" fill="#64748b" font-family="Segoe UI,Tahoma,sans-serif">'+esc(lbl.length>10?lbl.substring(0,9)+'…':lbl)+'</text>';}
+    }
+    // Branch arrows (dashed blue, curved)
+    var r=stepRows[i];
+    r.brs.forEach(function(br,bi){
+      var by=r.brStartY+bi*(NH+BR_YGAP);
+      var x1=PAD+NW,y1b=r.mainY+NH/2;
+      var x2=PAD+NW+BR_XGAP,y2b=by+NH/2;
+      var cpx=(x1+x2)/2;
+      var lbl=br.label||'';
+      svg+='<path d="M'+x1+','+y1b+' C'+cpx+','+y1b+' '+cpx+','+y2b+' '+(x2-6)+','+y2b+'" stroke="#2563eb" stroke-width="1.5" fill="none" stroke-dasharray="5,3" marker-end="url(#arB)"/>';
+      if(lbl){var lx=(x1+x2)/2,ly=(y1b+y2b)/2;svg+='<rect x="'+(lx-34)+'" y="'+(ly-9)+'" width="68" height="16" rx="8" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1"/><text x="'+lx+'" y="'+(ly+4)+'" text-anchor="middle" font-size="9" fill="#1e40af" font-family="Segoe UI,Tahoma,sans-serif">'+esc(lbl.length>10?lbl.substring(0,9)+'…':lbl)+'</text>';}
+    });
+  });
+  svg+='</svg>';
+
+  document.getElementById('flowViz').innerHTML='<div style="position:relative;width:'+totalW+'px;height:'+totalH+'px;margin:0 auto">'+nodesHTML+svg+'</div>';
+}
+
+function openFlowNodeDetail(sopId,dept){
+  var s=sopList.find(function(x){return (x.processName+'_'+x.department)===sopId;});
+  if(!s){alert('ยังไม่ได้โหลดไฟล์ SOP นี้\nไปที่แท็บ "คลัง SOP" และโหลดไฟล์ก่อน');return;}
+  var deptInfo=DEPT_MAP[s.department]||{name:s.departmentName||'-',icon:'📋'};
+  document.getElementById('modalTitle').textContent=deptInfo.icon+' '+s.processName;
+  document.getElementById('modalBody').innerHTML=buildSOPDetail(s,deptInfo);
+  document.getElementById('sopModal').classList.add('open');
+}
+
+// ===== EXPORT FLOW =====
+function saveFlowHTML(){
+  var f=getSelectedFlow();if(!f||!f.steps.length){alert('ไม่มีข้อมูล Flow ที่จะ Export');return;}
+  // Build viz HTML for export
+  var vizHTML='<div style="display:flex;align-items:center;gap:0;padding:20px;flex-wrap:nowrap;overflow-x:auto">';
+  f.steps.forEach(function(st,i){
+    var dept=DEPT_MAP[st.dept]||{name:st.dept,icon:'📋'};
+    var colors={sales:'#fff1f2;border:#fda4af;color:#9f1239',it:'#eff6ff;border:#93c5fd;color:#1e40af',hr:'#fdf4ff;border:#d8b4fe;color:#6b21a8',accounting:'#fffbeb;border:#fde68a;color:#92400e',logistic:'#f0fdf4;border:#86efac;color:#14532d',warehouse:'#eff6ff;border:#93c5fd;color:#1e3a8a',graphic:'#fdf4ff;border:#d8b4fe;color:#581c87'};
+    var c=colors[st.dept]||'#f8fafc;border:#cbd5e1;color:#475569';
+    var bg=c.split(';')[0],brd=c.split(';')[1]?.replace('border:',''),col=c.split(';')[2]?.replace('color:','');
+    if(i>0){
+      var lbl=st.trigger||'';
+      vizHTML+='<div style="display:flex;flex-direction:column;align-items:center;width:90px;flex-shrink:0;padding-top:8px">'+(lbl?'<div style="font-size:.65rem;color:#1e40af;background:#eff6ff;border:1px solid #bfdbfe;border-radius:12px;padding:2px 7px;margin-bottom:6px;text-align:center;max-width:90px">'+esc(lbl)+'</div>':'')+'<div style="display:flex;align-items:center"><div style="width:50px;height:2px;background:#cbd5e1"></div><span style="color:#94a3b8;font-size:1.2rem;margin-left:-6px">▶</span></div></div>';
+    }
+    vizHTML+='<div style="display:flex;flex-direction:column;align-items:center;width:180px;flex-shrink:0"><div style="width:160px;border-radius:12px;padding:14px 12px;border:2px solid '+brd+';text-align:center;background:'+bg+';color:'+col+';position:relative;box-shadow:0 2px 8px rgba(0,0,0,.1)">' +
+      '<div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);width:22px;height:22px;border-radius:50%;background:#1a2b4a;color:white;font-size:.7rem;font-weight:800;display:flex;align-items:center;justify-content:center">'+(i+1)+'</div>' +
+      '<div style="font-size:1.6rem;margin-bottom:6px">'+st.deptIcon+'</div>' +
+      '<div style="font-size:.78rem;font-weight:800;line-height:1.3">'+esc(st.sopName)+'</div>' +
+      '<div style="font-size:.66rem;margin-top:4px;opacity:.75">'+esc(dept.name)+'</div>' +
+    '</div></div>';
+  });
+  vizHTML+='</div>';
+
+  var html='<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8"><title>Flow: '+esc(f.name)+' — VRSteel</title>' +
+    '<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:"Segoe UI",sans-serif;background:#f0f4f8;padding:24px;color:#1e293b}.wrap{max-width:1200px;margin:0 auto}.hdr{background:linear-gradient(135deg,#1a2b4a,#2d4a7a);color:white;padding:18px 22px;border-radius:12px;margin-bottom:20px}.card{background:white;border-radius:12px;padding:24px;box-shadow:0 2px 8px rgba(0,0,0,.08);overflow-x:auto}</style></head>' +
+    '<body><div class="wrap"><div class="hdr"><h1 style="font-size:1.2rem;font-weight:800">🗺️ Flow Map — VRSteel</h1><p style="font-size:.82rem;opacity:.75;margin-top:3px">'+esc(f.name)+' | สร้างเมื่อ '+new Date().toLocaleDateString('th-TH')+'</p></div>' +
+    '<div class="card">'+vizHTML+'</div></div></body></html>';
+
+  var blob=new Blob([html],{type:'text/html;charset=utf-8'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');
+  a.href=url;a.download='FlowMap-'+f.name.replace(/\s+/g,'-')+'.html';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// ===== BRANCH MANAGEMENT =====
+var addingBranchForStep=-1;
+
+function showAddBranchModal(stepIdx){
+  addingBranchForStep=stepIdx;
+  document.getElementById('branchLabelInput').value='';
+  document.getElementById('branchSopInput').value='';
+  document.getElementById('branchDeptInput').value='sales';
+  var html='';
+  if(sopList.length){
+    sopList.forEach(function(s){
+      var d=DEPT_MAP[s.department]||{icon:'📋',name:s.departmentName||'-'};
+      html+='<div class="sop-sel-item" onclick="selectBranchSop(\''+esc(s.processName)+'\',\''+esc(s.department)+'\',\''+esc(d.icon)+'\',this)">'+
+        '<div class="si-icon">'+d.icon+'</div>'+
+        '<div><div class="si-name">'+esc(s.processName)+'</div><div class="si-dept">'+d.name+'</div></div>'+
+      '</div>';
+    });
+  } else {
+    html='<div class="no-sop-msg" style="font-size:.8rem;color:#94a3b8;text-align:center;padding:16px">กรอกชื่อ SOP เองด้านล่าง</div>';
+  }
+  document.getElementById('branchSopFromLib').innerHTML=html;
+  document.getElementById('branchModal').classList.add('open');
+  setTimeout(function(){document.getElementById('branchLabelInput').focus();},100);
+}
+
+function selectBranchSop(name,dept,icon,el){
+  document.getElementById('branchSopInput').value=name;
+  document.getElementById('branchDeptInput').value=dept;
+  document.querySelectorAll('#branchSopFromLib .sop-sel-item').forEach(function(x){x.style.background='';x.style.borderColor='transparent';});
+  el.style.background='#eff6ff';el.style.borderColor='#bfdbfe';
+}
+
+function closeBranchModal(){document.getElementById('branchModal').classList.remove('open');addingBranchForStep=-1;}
+
+function saveBranch(){
+  var f=getSelectedFlow();
+  if(!f||addingBranchForStep<0)return;
+  var name=document.getElementById('branchSopInput').value.trim();
+  var dept=document.getElementById('branchDeptInput').value;
+  var label=document.getElementById('branchLabelInput').value.trim();
+  if(!name){alert('กรุณากรอกชื่อ SOP ปลายทาง');return;}
+  var info=DEPT_MAP[dept]||{icon:'📋'};
+  var st=f.steps[addingBranchForStep];
+  if(!st.branches)st.branches=[];
+  st.branches.push({sopName:name,dept:dept,deptIcon:info.icon,label:label});
+  saveToStorage();closeBranchModal();renderFlowPanel();
+}
+
+function removeBranch(stepIdx,brIdx){
+  var f=getSelectedFlow();if(!f)return;
+  f.steps[stepIdx].branches.splice(brIdx,1);
+  saveToStorage();renderFlowPanel();
+}
+
+// ===== MASTER DATA (Roles & Tools) =====
+var DEFAULT_ROLES=['Sales Officer','Sales Manager','IT Officer','IT Manager','HR Officer','HR Manager',
+  'Accounting Officer','Accounting Manager','Logistic Officer','Logistic Manager',
+  'Warehouse Officer','Warehouse Manager','QC Officer','Graphic Designer','Graphic Design Lead',
+  'Department Manager','พนักงานขับรถ'];
+var DEFAULT_TOOLS=['Bplus ERP','Line','Microsoft Excel','Email','Google Maps','Remote Desktop',
+  'Adobe Illustrator','Google Drive','เครื่องชั่งน้ำหนัก','เทปวัด'];
+
+var masterRoles=[];
+var masterTools=[];
+
+function loadMasterData(){
+  // Defaults ถ้า Supabase ยังไม่มีข้อมูล (จะถูก override ใน loadFromSupabase)
+  if(!masterRoles.length)masterRoles=[...DEFAULT_ROLES];
+  if(!masterTools.length)masterTools=[...DEFAULT_TOOLS];
+}
+
+function saveMasterData(){
+  syncKey('master_roles',masterRoles);
+  syncKey('master_tools',masterTools);
+}
+
+function renderAdminPanel(){
+  // Roles
+  document.getElementById('roleCount').textContent=masterRoles.length+' รายการ';
+  var rhtml='';
+  if(!masterRoles.length){
+    rhtml='<div style="text-align:center;padding:20px;color:#94a3b8;font-size:.82rem">ยังไม่มีรายการ</div>';
+  } else {
+    masterRoles.forEach(function(r,i){
+      rhtml+='<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border:1.5px solid #e2e8f0;border-radius:9px;margin-bottom:6px;background:#f8fafc" id="role-row-'+i+'">';
+      rhtml+='<span style="font-size:.9rem;flex:1;font-weight:600;color:#1e293b" id="role-txt-'+i+'">'+esc(r)+'</span>';
+      rhtml+='<button onclick="startEditRole('+i+')" style="padding:4px 10px;background:#eff6ff;color:#1e40af;border:1px solid #bfdbfe;border-radius:6px;font-size:.75rem;font-weight:700;cursor:pointer;font-family:inherit">แก้ไข</button>';
+      rhtml+='<button onclick="deleteRole('+i+')" style="padding:4px 10px;background:#fee2e2;color:#dc2626;border:1px solid #fecaca;border-radius:6px;font-size:.75rem;font-weight:700;cursor:pointer;font-family:inherit">ลบ</button>';
+      rhtml+='</div>';
+    });
+  }
+  document.getElementById('roleList').innerHTML=rhtml;
+
+  // Tools
+  document.getElementById('toolCount').textContent=masterTools.length+' รายการ';
+  var thtml='';
+  if(!masterTools.length){
+    thtml='<div style="text-align:center;padding:20px;color:#94a3b8;font-size:.82rem">ยังไม่มีรายการ</div>';
+  } else {
+    masterTools.forEach(function(t,i){
+      thtml+='<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border:1.5px solid #e2e8f0;border-radius:9px;margin-bottom:6px;background:#f8fafc" id="tool-row-'+i+'">';
+      thtml+='<span style="font-size:.9rem;flex:1;font-weight:600;color:#1e293b" id="tool-txt-'+i+'">'+esc(t)+'</span>';
+      thtml+='<button onclick="startEditTool('+i+')" style="padding:4px 10px;background:#eff6ff;color:#1e40af;border:1px solid #bfdbfe;border-radius:6px;font-size:.75rem;font-weight:700;cursor:pointer;font-family:inherit">แก้ไข</button>';
+      thtml+='<button onclick="deleteTool('+i+')" style="padding:4px 10px;background:#fee2e2;color:#dc2626;border:1px solid #fecaca;border-radius:6px;font-size:.75rem;font-weight:700;cursor:pointer;font-family:inherit">ลบ</button>';
+      thtml+='</div>';
+    });
+  }
+  document.getElementById('toolList').innerHTML=thtml;
+}
+
+function addRole(){
+  var v=document.getElementById('newRoleName').value.trim();
+  if(!v)return;
+  if(masterRoles.indexOf(v)>=0){alert('"'+v+'" มีอยู่แล้ว');return;}
+  masterRoles.push(v);
+  saveMasterData();
+  document.getElementById('newRoleName').value='';
+  renderAdminPanel();
+}
+
+function deleteRole(i){
+  if(!confirm('ลบ "'+masterRoles[i]+'" ?'))return;
+  masterRoles.splice(i,1);
+  saveMasterData();
+  renderAdminPanel();
+}
+
+function startEditRole(i){
+  var row=document.getElementById('role-row-'+i);
+  var cur=masterRoles[i];
+  row.innerHTML='<input id="edit-role-input" value="'+esc(cur)+'" style="flex:1;padding:6px 10px;border:1.5px solid #2563eb;border-radius:7px;font-family:inherit;font-size:.88rem;outline:none" onkeydown="if(event.key===\'Enter\')saveEditRole('+i+')">'
+    +'<button onclick="saveEditRole('+i+')" style="padding:4px 10px;background:#1a2b4a;color:white;border:none;border-radius:6px;font-size:.75rem;font-weight:700;cursor:pointer;font-family:inherit">บันทึก</button>'
+    +'<button onclick="renderAdminPanel()" style="padding:4px 10px;background:#f1f5f9;color:#374151;border:1.5px solid #e2e8f0;border-radius:6px;font-size:.75rem;font-weight:700;cursor:pointer;font-family:inherit">ยกเลิก</button>';
+  document.getElementById('edit-role-input').focus();
+}
+
+function saveEditRole(i){
+  var v=document.getElementById('edit-role-input').value.trim();
+  if(!v)return;
+  masterRoles[i]=v;
+  saveMasterData();
+  renderAdminPanel();
+}
+
+function addTool(){
+  var v=document.getElementById('newToolName').value.trim();
+  if(!v)return;
+  if(masterTools.indexOf(v)>=0){alert('"'+v+'" มีอยู่แล้ว');return;}
+  masterTools.push(v);
+  saveMasterData();
+  document.getElementById('newToolName').value='';
+  renderAdminPanel();
+}
+
+function deleteTool(i){
+  if(!confirm('ลบ "'+masterTools[i]+'" ?'))return;
+  masterTools.splice(i,1);
+  saveMasterData();
+  renderAdminPanel();
+}
+
+function startEditTool(i){
+  var row=document.getElementById('tool-row-'+i);
+  var cur=masterTools[i];
+  row.innerHTML='<input id="edit-tool-input" value="'+esc(cur)+'" style="flex:1;padding:6px 10px;border:1.5px solid #2563eb;border-radius:7px;font-family:inherit;font-size:.88rem;outline:none" onkeydown="if(event.key===\'Enter\')saveEditTool('+i+')">'
+    +'<button onclick="saveEditTool('+i+')" style="padding:4px 10px;background:#1a2b4a;color:white;border:none;border-radius:6px;font-size:.75rem;font-weight:700;cursor:pointer;font-family:inherit">บันทึก</button>'
+    +'<button onclick="renderAdminPanel()" style="padding:4px 10px;background:#f1f5f9;color:#374151;border:1.5px solid #e2e8f0;border-radius:6px;font-size:.75rem;font-weight:700;cursor:pointer;font-family:inherit">ยกเลิก</button>';
+  document.getElementById('edit-tool-input').focus();
+}
+
+function saveEditTool(i){
+  var v=document.getElementById('edit-tool-input').value.trim();
+  if(!v)return;
+  masterTools[i]=v;
+  saveMasterData();
+  renderAdminPanel();
+}
+
+// ===== SUPABASE DATA LAYER =====
+// เซฟ key ใด key หนึ่งไปยัง Supabase (fire-and-forget)
+function syncKey(key,value){
+  sb.from('app_data').upsert({key:key,value:value,updated_at:new Date().toISOString()})
+    .then(function(res){if(res.error)console.error('sync '+key+' error:',res.error);});
+}
+
+function saveToStorage(){
+  syncKey('sops',sopList);
+  syncKey('flows',flows);
+}
+
+async function loadFromSupabase(){
+  try{
+    var res=await sb.from('app_data').select('*');
+    if(res.error)throw res.error;
+    var map={};
+    (res.data||[]).forEach(function(r){map[r.key]=r.value;});
+    if(map['sops']&&Array.isArray(map['sops']))sopList=map['sops'];
+    if(map['flows']&&Array.isArray(map['flows']))flows=map['flows'];
+    if(map['master_roles']&&Array.isArray(map['master_roles']))masterRoles=map['master_roles'];
+    if(map['master_tools']&&Array.isArray(map['master_tools']))masterTools=map['master_tools'];
+  }catch(e){
+    console.error('loadFromSupabase failed:',e);
+    alert('❌ ไม่สามารถเชื่อมต่อ Supabase ได้\nกรุณาตรวจสอบ SUPABASE_URL และ SUPABASE_KEY ในไฟล์ HTML');
+  }
+}
+
+// ===== EDIT SOP =====
+var editingSopIdx=-1;
+
+function openEditModal(idx){
+  editingSopIdx=idx;
+  renderEditForm(JSON.parse(JSON.stringify(sopList[idx])));
+  document.getElementById('editModal').classList.add('open');
+}
+
+function closeEditModal(){
+  document.getElementById('editModal').classList.remove('open');
+  editingSopIdx=-1;
+}
+
+function efld(label,input){
+  return '<div style="margin-bottom:9px"><label style="display:block;font-size:.78rem;font-weight:700;color:#374151;margin-bottom:4px">'+label+'</label>'+input+'</div>';
+}
+
+var eInputStyle='width:100%;padding:8px 11px;border:1.5px solid #e2e8f0;border-radius:8px;font-family:inherit;font-size:.86rem;outline:none;box-sizing:border-box';
+var eAreaStyle=eInputStyle+';resize:vertical';
+
+function renderEditForm(s){
+  var steps=s.steps||[];
+  var issues=s.issues||[];
+  var html='';
+
+  // Basic info
+  html+='<div style="background:#f8fafc;border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:.82rem;font-weight:800;color:#1a2b4a">📋 ข้อมูลพื้นฐาน</div>';
+  html+=efld('ชื่อ Process','<input id="ed-name" value="'+esc(s.processName||'')+'" style="'+eInputStyle+'">');
+  html+=efld('เจ้าของ Process','<input id="ed-owner" value="'+esc(s.processOwner||s.owner||'')+'" style="'+eInputStyle+'">');
+  html+=efld('วัตถุประสงค์','<textarea id="ed-purpose" rows="2" style="'+eAreaStyle+'">'+esc(s.purpose||'')+'</textarea>');
+  html+=efld('Trigger','<input id="ed-trigger" value="'+esc(s.trigger||'')+'" style="'+eInputStyle+'">');
+
+  // Steps
+  html+='<div style="background:#f8fafc;border-radius:8px;padding:10px 12px;margin:14px 0 10px;font-size:.82rem;font-weight:800;color:#1a2b4a">📋 ขั้นตอน ('+steps.length+')</div>';
+  steps.forEach(function(st,i){
+    html+='<div id="ed-step-'+i+'" style="border:1.5px solid #e2e8f0;border-radius:10px;padding:11px;margin-bottom:8px">';
+    html+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px">';
+    html+='<span style="background:#1a2b4a;color:white;width:23px;height:23px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:800">'+(i+1)+'</span>';
+    html+='<button onclick="removeEditStep('+i+')" style="border:none;background:#fee2e2;color:#dc2626;border-radius:5px;padding:3px 8px;cursor:pointer;font-size:.74rem;font-family:inherit">ลบ</button>';
+    html+='</div>';
+    html+='<textarea id="ed-step-action-'+i+'" placeholder="การดำเนินการ *" rows="2" style="'+eAreaStyle+';margin-bottom:5px">'+esc(st.action||'')+'</textarea>';
+    html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:5px">';
+    html+='<input id="ed-step-role-'+i+'" placeholder="ผู้รับผิดชอบ" value="'+esc(st.role||'')+'" style="'+eInputStyle+'">';
+    html+='<input id="ed-step-tool-'+i+'" placeholder="เครื่องมือ" value="'+esc(st.tool||'')+'" style="'+eInputStyle+'">';
+    html+='<input id="ed-step-output-'+i+'" placeholder="Output" value="'+esc(st.output||'')+'" style="'+eInputStyle+'">';
+    html+='<input id="ed-step-decision-'+i+'" placeholder="เงื่อนไข (ถ้ามี)" value="'+esc(st.decision||'')+'" style="'+eInputStyle+'">';
+    html+='</div></div>';
+  });
+  html+='<button onclick="addEditStep()" style="width:100%;padding:8px;border:2px dashed #93c5fd;background:#f0f9ff;color:#0369a1;border-radius:9px;font-size:.82rem;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:14px">+ เพิ่มขั้นตอน</button>';
+
+  // Issues
+  html+='<div style="background:#f8fafc;border-radius:8px;padding:10px 12px;margin-bottom:10px;font-size:.82rem;font-weight:800;color:#1a2b4a">⚠️ ปัญหาที่พบบ่อย ('+issues.length+')</div>';
+  issues.forEach(function(iss,i){
+    html+='<div id="ed-issue-'+i+'" style="border:1.5px solid #fde68a;background:#fffbeb;border-radius:10px;padding:11px;margin-bottom:8px">';
+    html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">';
+    html+='<span style="font-size:.76rem;font-weight:700;color:#92400e">ปัญหา '+(i+1)+'</span>';
+    html+='<button onclick="removeEditIssue('+i+')" style="border:none;background:#fee2e2;color:#dc2626;border-radius:5px;padding:3px 8px;cursor:pointer;font-size:.74rem;font-family:inherit">ลบ</button>';
+    html+='</div>';
+    html+='<input id="ed-issue-prob-'+i+'" placeholder="ปัญหาที่เจอ" value="'+esc(iss.problem||'')+'" style="'+eInputStyle+';margin-bottom:5px">';
+    html+='<textarea id="ed-issue-sol-'+i+'" placeholder="วิธีแก้ไข" rows="2" style="'+eAreaStyle+'">'+esc(iss.solution||'')+'</textarea>';
+    html+='</div>';
+  });
+  html+='<button onclick="addEditIssue()" style="width:100%;padding:8px;border:2px dashed #fbbf24;background:#fffbeb;color:#92400e;border-radius:9px;font-size:.82rem;font-weight:700;cursor:pointer;font-family:inherit">+ เพิ่มปัญหา</button>';
+
+  document.getElementById('editForm').innerHTML=html;
+}
+
+function collectEditState(){
+  var steps=[],i=0;
+  while(document.getElementById('ed-step-'+i)){
+    steps.push({
+      action:document.getElementById('ed-step-action-'+i).value,
+      role:document.getElementById('ed-step-role-'+i).value,
+      tool:document.getElementById('ed-step-tool-'+i).value,
+      output:document.getElementById('ed-step-output-'+i).value,
+      decision:document.getElementById('ed-step-decision-'+i).value,
+      input:''
+    });
+    i++;
+  }
+  var issues=[]; i=0;
+  while(document.getElementById('ed-issue-'+i)){
+    issues.push({
+      problem:document.getElementById('ed-issue-prob-'+i).value,
+      solution:document.getElementById('ed-issue-sol-'+i).value,
+    });
+    i++;
+  }
+  return{
+    processName:document.getElementById('ed-name').value,
+    processOwner:document.getElementById('ed-owner').value,
+    purpose:document.getElementById('ed-purpose').value,
+    trigger:document.getElementById('ed-trigger').value,
+    steps:steps, issues:issues
+  };
+}
+
+function removeEditStep(idx){
+  var s=collectEditState();
+  s.steps.splice(idx,1);
+  renderEditForm(Object.assign({},sopList[editingSopIdx],s));
+}
+function addEditStep(){
+  var s=collectEditState();
+  s.steps.push({action:'',role:'',tool:'',output:'',decision:'',input:''});
+  renderEditForm(Object.assign({},sopList[editingSopIdx],s));
+}
+function removeEditIssue(idx){
+  var s=collectEditState();
+  s.issues.splice(idx,1);
+  renderEditForm(Object.assign({},sopList[editingSopIdx],s));
+}
+function addEditIssue(){
+  var s=collectEditState();
+  s.issues.push({problem:'',solution:''});
+  renderEditForm(Object.assign({},sopList[editingSopIdx],s));
+}
+
+function saveEditedSOP(){
+  if(editingSopIdx<0)return;
+  var s=collectEditState();
+  if(!s.processName.trim()){alert('กรุณากรอกชื่อ Process');return;}
+  sopList[editingSopIdx]=Object.assign({},sopList[editingSopIdx],s,{
+    owner:s.processOwner,
+    exportedAt:new Date().toISOString()
+  });
+  saveToStorage();
+  refreshAll();
+  closeEditModal();
+}
+
+// ===== INIT =====
+async function initApp(){
+  document.getElementById('loadingOverlay').classList.remove('hidden');
+  await loadFromSupabase();
+  loadMasterData(); // seed defaults if Supabase returned nothing
+  document.getElementById('loadingOverlay').classList.add('hidden');
+  refreshAll();
+}
+initApp();
+</script>
+</body>
+</html>

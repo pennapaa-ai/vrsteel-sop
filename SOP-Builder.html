@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOP Builder — VRSteel</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',Tahoma,sans-serif;background:#f0f4f8;color:#1e293b;min-height:100vh;font-size:16px}
+.app{max-width:680px;margin:0 auto;padding:16px 16px 80px}
+
+/* Header */
+.hdr{background:linear-gradient(135deg,#1a2b4a,#2d4a7a);color:white;padding:18px 22px;border-radius:16px;margin-bottom:20px;display:flex;align-items:center;gap:14px}
+.hdr-logo{font-size:2rem}
+.hdr h1{font-size:1.15rem;font-weight:800}
+.hdr p{font-size:.82rem;opacity:.75;margin-top:2px}
+
+/* Progress dots */
+.dots{display:flex;justify-content:center;gap:8px;margin-bottom:20px}
+.dot{width:10px;height:10px;border-radius:50%;background:#cbd5e1;transition:all .3s}
+.dot.done{background:#22c55e}
+.dot.active{background:#2563eb;width:28px;border-radius:5px}
+
+/* Card */
+.card{background:white;border-radius:16px;padding:24px;box-shadow:0 2px 12px rgba(0,0,0,.08);margin-bottom:12px}
+.card-title{font-size:1.1rem;font-weight:800;color:#1a2b4a;margin-bottom:4px}
+.card-sub{font-size:.86rem;color:#64748b;margin-bottom:20px;line-height:1.5}
+
+/* Department grid */
+.dept-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.dept-btn{background:#f8fafc;border:2px solid #e2e8f0;border-radius:14px;padding:18px 12px;text-align:center;cursor:pointer;transition:all .2s;-webkit-tap-highlight-color:transparent}
+.dept-btn:active{transform:scale(.97)}
+.dept-btn.sel{border-color:#2563eb;background:#eff6ff;box-shadow:0 0 0 3px rgba(37,99,235,.15)}
+.dept-btn .di{font-size:2.2rem;margin-bottom:8px}
+.dept-btn .dn{font-size:.82rem;font-weight:700;color:#1e40af}
+
+/* Process list */
+.proc-list{display:flex;flex-direction:column;gap:10px}
+.proc-btn{background:#f8fafc;border:2px solid #e2e8f0;border-radius:12px;padding:16px 18px;cursor:pointer;display:flex;align-items:center;gap:14px;transition:all .2s;-webkit-tap-highlight-color:transparent;text-align:left}
+.proc-btn:active{transform:scale(.98)}
+.proc-btn.sel{border-color:#2563eb;background:#eff6ff}
+.proc-btn .pi{font-size:1.8rem;flex-shrink:0}
+.proc-btn .pt{font-size:.98rem;font-weight:700;color:#1a2b4a}
+.proc-btn .pd{font-size:.8rem;color:#64748b;margin-top:2px}
+
+/* Form fields */
+.field{margin-bottom:16px}
+.field label{display:block;font-size:.86rem;font-weight:700;color:#374151;margin-bottom:8px}
+.field input,.field textarea,.field select{width:100%;padding:14px 16px;border:2px solid #e2e8f0;border-radius:10px;font-size:.96rem;font-family:inherit;outline:none;transition:border-color .2s;background:#fafafa;color:#1e293b}
+.field input:focus,.field textarea:focus,.field select:focus{border-color:#2563eb;background:white}
+.field textarea{resize:vertical;min-height:80px;line-height:1.5}
+
+/* Steps viewer */
+.step-cards{display:flex;flex-direction:column;gap:10px}
+.step-card{background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:12px;padding:16px}
+.step-card-top{display:flex;align-items:flex-start;gap:12px}
+.step-badge{background:#1a2b4a;color:white;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.82rem;font-weight:800;flex-shrink:0;margin-top:1px}
+.step-action{font-size:.92rem;font-weight:600;color:#1a2b4a;line-height:1.4;flex:1}
+.step-meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;padding-left:44px}
+.chip{background:#eff6ff;color:#1e40af;border:1px solid #bfdbfe;border-radius:20px;padding:3px 10px;font-size:.75rem;font-weight:600}
+.chip.role{background:#fdf4ff;color:#7e22ce;border-color:#e9d5ff}
+.chip.tool{background:#f0fdf4;color:#15803d;border-color:#bbf7d0}
+.chip.dec{background:#fffbeb;color:#92400e;border-color:#fde68a}
+.step-actions{display:flex;gap:6px;margin-top:10px;padding-left:44px}
+.sbtn{border:none;border-radius:7px;padding:7px 14px;font-size:.8rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s}
+.sbtn-edit{background:#eff6ff;color:#1e40af}
+.sbtn-del{background:#fee2e2;color:#dc2626}
+.sbtn-edit:hover{background:#dbeafe}
+.sbtn-del:hover{background:#fecaca}
+
+/* Add step button */
+.add-step-btn{border:2px dashed #93c5fd;background:#f0f9ff;color:#0369a1;border-radius:12px;padding:14px;width:100%;font-size:.92rem;font-weight:700;cursor:pointer;font-family:inherit;margin-top:8px;transition:all .15s}
+.add-step-btn:hover{background:#e0f2fe}
+
+/* Issues */
+.issue-card{background:#fffbeb;border:1.5px solid #fde68a;border-radius:12px;padding:14px;margin-bottom:10px}
+.issue-prob{font-size:.88rem;font-weight:700;color:#92400e;margin-bottom:4px}
+.issue-sol{font-size:.84rem;color:#78350f;line-height:1.5}
+.issue-actions{display:flex;gap:6px;margin-top:8px}
+
+/* Nav buttons */
+.nav{display:flex;gap:10px;margin-top:20px}
+.nav-back{background:#f1f5f9;color:#374151;border:1.5px solid #e2e8f0;border-radius:12px;padding:14px 22px;font-size:.92rem;font-weight:700;cursor:pointer;font-family:inherit;flex:0}
+.nav-next{background:#1a2b4a;color:white;border:none;border-radius:12px;padding:14px;font-size:.96rem;font-weight:800;cursor:pointer;font-family:inherit;flex:1;transition:all .2s}
+.nav-next:hover{background:#253d6a}
+.nav-next:active{transform:scale(.98)}
+
+/* Modal */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:flex-end;justify-content:center}
+.modal-bg.open{display:flex}
+.modal{background:white;border-radius:20px 20px 0 0;padding:24px;width:100%;max-width:680px;max-height:90vh;overflow-y:auto;box-shadow:0 -8px 40px rgba(0,0,0,.2)}
+.modal-title{font-size:1rem;font-weight:800;color:#1a2b4a;margin-bottom:18px;padding-bottom:12px;border-bottom:1px solid #f1f5f9}
+.modal-btns{display:flex;gap:8px;margin-top:16px}
+.modal-cancel{flex:1;background:#f1f5f9;border:none;border-radius:10px;padding:13px;font-size:.9rem;font-weight:700;cursor:pointer;font-family:inherit}
+.modal-save{flex:2;background:#1a2b4a;color:white;border:none;border-radius:10px;padding:13px;font-size:.9rem;font-weight:700;cursor:pointer;font-family:inherit}
+
+/* Output/Done */
+.done-banner{background:linear-gradient(135deg,#065f46,#047857);color:white;border-radius:14px;padding:20px;text-align:center;margin-bottom:16px}
+.done-banner .db-icon{font-size:2.5rem;margin-bottom:8px}
+.done-banner h2{font-size:1.1rem;font-weight:800}
+.done-banner p{font-size:.84rem;opacity:.85;margin-top:4px}
+.action-row{display:flex;flex-direction:column;gap:10px;margin-bottom:16px}
+.action-btn{border:none;border-radius:12px;padding:16px;font-size:.96rem;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:10px;transition:all .2s}
+.action-btn:active{transform:scale(.98)}
+.ab-save{background:#1a2b4a;color:white}
+.ab-print{background:#f1f5f9;color:#374151;border:1.5px solid #e2e8f0}
+.ab-quiz{background:#eff6ff;color:#1e40af;border:1.5px solid #bfdbfe}
+
+/* SOP preview */
+.sop-preview{background:white;border:1.5px solid #e2e8f0;border-radius:12px;padding:20px;font-size:.85rem;line-height:1.6}
+.sop-preview h1{font-size:1.05rem;color:#1a2b4a;border-bottom:2px solid #1a2b4a;padding-bottom:8px;margin-bottom:14px}
+.sop-preview h2{font-size:.88rem;font-weight:800;color:#1e40af;background:#eff6ff;padding:5px 10px;border-radius:5px;margin-top:16px;margin-bottom:8px;border-left:3px solid #2563eb}
+.sop-preview table{width:100%;border-collapse:collapse;font-size:.8rem;margin-top:6px}
+.sop-preview th{background:#1a2b4a;color:white;padding:7px 8px;text-align:left}
+.sop-preview td{border:1px solid #e2e8f0;padding:7px 8px;vertical-align:top}
+.sop-preview tr:nth-child(even) td{background:#f8fafc}
+.ttag{display:inline-block;background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0;border-radius:20px;padding:2px 8px;font-size:.75rem;margin:2px}
+
+/* Quiz */
+.quiz-wrap{background:white;border-radius:12px;padding:20px;margin-top:12px}
+.qcard{background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:10px;padding:16px;margin-bottom:12px}
+.qnum{font-size:.72rem;color:#94a3b8;margin-bottom:4px}
+.qtext{font-weight:700;color:#1a2b4a;margin-bottom:10px;font-size:.9rem;line-height:1.4}
+.qopt{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-radius:8px;cursor:pointer;border:1.5px solid #e2e8f0;background:white;margin-bottom:6px;font-size:.86rem;color:#374151;transition:all .15s}
+.qopt:hover{background:#eff6ff;border-color:#93c5fd}
+.qopt.correct{background:#dcfce7!important;border-color:#16a34a!important;color:#15803d;font-weight:700}
+.qopt.wrong{background:#fee2e2!important;border-color:#dc2626!important;color:#dc2626}
+.submit-quiz-btn{width:100%;background:#1a2b4a;color:white;border:none;border-radius:10px;padding:14px;font-size:.96rem;font-weight:800;cursor:pointer;font-family:inherit;margin-top:12px}
+.score-box{text-align:center;padding:24px;background:#f0fdf4;border-radius:12px;border:2px solid #22c55e;margin-top:16px}
+.score-big{font-size:3rem;font-weight:900;color:#15803d;line-height:1}
+
+@media print{.hdr,.dots,.nav,.action-row,.quiz-wrap{display:none!important}.sop-preview{border:none;padding:0}}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<div class="app">
+  <div class="hdr">
+    <div class="hdr-logo">📋</div>
+    <div>
+      <h1>SOP Builder — VRSteel</h1>
+      <p>สร้างคู่มือการทำงานสำหรับแผนกของคุณ</p>
+    </div>
+  </div>
+  <div class="dots" id="dots"></div>
+  <div id="screen"></div>
+</div>
+
+<!-- Edit step modal -->
+<div class="modal-bg" id="stepModal">
+  <div class="modal">
+    <div class="modal-title" id="modalTitle">แก้ไขขั้นตอน</div>
+    <div class="field"><label>การดำเนินการ *</label><textarea id="m-action" rows="3" placeholder="อธิบายสิ่งที่ต้องทำ"></textarea></div>
+    <div class="field"><label>ผู้รับผิดชอบ</label><select id="m-role"></select></div>
+    <div class="field"><label>เครื่องมือที่ใช้</label><select id="m-tool"></select></div>
+    <div class="field"><label>ผลลัพธ์ที่ควรได้ (Output)</label><input type="text" id="m-output" placeholder="เช่น ใบกำกับภาษีในระบบ Bplus"></div>
+    <div class="field"><label>🔀 เงื่อนไขพิเศษ (ถ้ามี)</label><input type="text" id="m-decision" placeholder="เช่น ถ้าวงเงินเกิน 50,000 บาท ต้องขออนุมัติก่อน"></div>
+    <div class="modal-btns">
+      <button class="modal-cancel" onclick="closeModal()">ยกเลิก</button>
+      <button class="modal-save" onclick="saveStep()">💾 บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit issue modal -->
+<div class="modal-bg" id="issueModal">
+  <div class="modal">
+    <div class="modal-title">แก้ไขปัญหา</div>
+    <div class="field"><label>ปัญหาที่เจอ</label><input type="text" id="m-prob" placeholder="เช่น ระบบ Bplus ไม่บันทึก"></div>
+    <div class="field"><label>วิธีแก้ไข</label><textarea id="m-sol" rows="3" placeholder="เช่น ลองล็อกเอ้าท์แล้วล็อกอินใหม่ ถ้ายังไม่ได้แจ้ง IT"></textarea></div>
+    <div class="modal-btns">
+      <button class="modal-cancel" onclick="closeIssueModal()">ยกเลิก</button>
+      <button class="modal-save" onclick="saveIssue()">💾 บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== SUPABASE CONFIG =====
+// แก้ค่า 2 บรรทัดนี้ด้วย URL และ Key จาก Supabase → Settings → API
+const SUPABASE_URL = 'https://xfdihndkfptrrutzagfy.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhmZGlobmRrZnB0cnJ1dHphZ2Z5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzNjkyMjAsImV4cCI6MjA5Nzk0NTIyMH0.dAV3D2mYY7NAtPIObSy8gHljSbpaOaUV_aRm3wihiCM';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// Default master data (fallback if Supabase not configured yet)
+var DEFAULT_ROLES=['Sales Officer','Sales Manager','IT Officer','IT Manager','HR Officer','HR Manager',
+  'Accounting Officer','Accounting Manager','Logistic Officer','Logistic Manager',
+  'Warehouse Officer','Warehouse Manager','QC Officer','Graphic Designer','Graphic Design Lead',
+  'Department Manager','พนักงานขับรถ'];
+var DEFAULT_TOOLS=['Bplus ERP','Line','Microsoft Excel','Email','Google Maps','Remote Desktop',
+  'Adobe Illustrator','Google Drive','เครื่องชั่งน้ำหนัก','เทปวัด'];
+
+// Cache master data in memory
+var _masterRolesCache = null;
+var _masterToolsCache = null;
+
+async function loadMasterFromSupabase(){
+  try{
+    var res = await sb.from('app_data').select('value').eq('key','master_roles').maybeSingle();
+    if(res.data && Array.isArray(res.data.value)) _masterRolesCache = res.data.value;
+    var res2 = await sb.from('app_data').select('value').eq('key','master_tools').maybeSingle();
+    if(res2.data && Array.isArray(res2.data.value)) _masterToolsCache = res2.data.value;
+  }catch(e){ console.warn('Could not load master data:', e); }
+}
+
+// ===== COMPANY CONFIG =====
+const COMPANY = 'VRSteel';
+
+// ===== DEPARTMENTS =====
+const DEPTS = [
+  {id:'sales',name:'Sales & Marketing',icon:'📊'},
+  {id:'it',name:'IT',icon:'💻'},
+  {id:'hr',name:'HR',icon:'👥'},
+  {id:'accounting',name:'Accounting',icon:'🧾'},
+  {id:'logistic',name:'Logistic',icon:'🚚'},
+  {id:'warehouse',name:'Warehouse',icon:'📦'},
+  {id:'graphic',name:'Graphic Design',icon:'🎨'},
+];
+
+// ===== PROCESS TEMPLATES =====
+const TPL = {
+sales:[
+  {id:'quote',name:'การออกใบเสนอราคา',icon:'📄',desc:'เมื่อลูกค้าต้องการทราบราคาเหล็ก',
+   owner:'Sales Manager',
+   purpose:'เพื่อให้การออกใบเสนอราคาเหล็กแก่ลูกค้าเป็นมาตรฐาน ถูกต้อง และรวดเร็ว',
+   scope:'พนักงาน Sales ทุกคนที่มีหน้าที่ออกใบเสนอราคา',
+   trigger:'เมื่อลูกค้าติดต่อขอราคาสินค้าเหล็กทางโทรศัพท์ Line หรือ Email',
+   roles:[{role:'Sales Officer',description:'รับคำถามและออกใบเสนอราคา'},{role:'Sales Manager',description:'อนุมัติในกรณีให้ส่วนลดพิเศษ'}],
+   tools:['Bplus ERP','Line','Microsoft Excel'],
+   steps:[
+     {action:'รับข้อมูลจากลูกค้า: ชนิดเหล็ก ขนาด และปริมาณที่ต้องการ',role:'Sales Officer',tool:'Line',input:'ความต้องการลูกค้า',output:'รายการสินค้าที่ต้องการ',decision:''},
+     {action:'ตรวจสอบราคาและสต็อกสินค้าในระบบ Bplus',role:'Sales Officer',tool:'Bplus ERP',input:'รายการสินค้า',output:'ราคาและจำนวนสต็อก',decision:'ถ้าสินค้าไม่มีในสต็อก แจ้งลูกค้าและประเมินระยะเวลาจัดหา'},
+     {action:'ออกใบเสนอราคาในระบบ Bplus ตามนโยบายราคาบริษัท',role:'Sales Officer',tool:'Bplus ERP',input:'ราคาจากระบบ',output:'ใบเสนอราคา (Quotation)',decision:'ถ้ามีส่วนลดพิเศษ ต้องให้ Sales Manager อนุมัติก่อน'},
+     {action:'ส่งใบเสนอราคาให้ลูกค้าทาง Email หรือ Line',role:'Sales Officer',tool:'Line',input:'ใบเสนอราคา',output:'ลูกค้าได้รับใบเสนอราคา',decision:''},
+     {action:'ติดตามผลการตัดสินใจของลูกค้าภายใน 3 วันทำการ',role:'Sales Officer',tool:'Line',input:'ใบเสนอราคาที่ส่งไป',output:'ยืนยันหรือปฏิเสธจากลูกค้า',decision:''},
+   ],
+   issues:[
+     {problem:'สินค้าที่ลูกค้าต้องการไม่มีในสต็อก',solution:'แจ้ง Warehouse ตรวจสอบ แล้วให้ระยะเวลาโดยประมาณกับลูกค้า'},
+     {problem:'ราคาใน Bplus ไม่ตรงกับราคาตลาด',solution:'แจ้ง Sales Manager เพื่ออัปเดตราคาในระบบ'},
+   ]},
+  {id:'order',name:'การรับออเดอร์ลูกค้า',icon:'🛒',desc:'เมื่อลูกค้ายืนยันสั่งซื้อสินค้า',
+   owner:'Sales Manager',
+   purpose:'เพื่อให้การบันทึกออเดอร์ลูกค้าถูกต้องครบถ้วน และส่งข้อมูลต่อให้ Warehouse/Logistic ได้ทันที',
+   scope:'พนักงาน Sales ที่รับออเดอร์จากลูกค้า',
+   trigger:'เมื่อลูกค้ายืนยันสั่งซื้อสินค้า พร้อม PO หรือการยืนยันเป็นลายลักษณ์อักษร',
+   roles:[{role:'Sales Officer',description:'บันทึกออเดอร์ในระบบ'},{role:'Sales Manager',description:'อนุมัติออเดอร์วงเงินสูง'}],
+   tools:['Bplus ERP','Line','Email'],
+   steps:[
+     {action:'รับ PO หรือการยืนยันสั่งซื้อจากลูกค้า',role:'Sales Officer',tool:'Email',input:'PO ลูกค้า',output:'เอกสารยืนยันการสั่งซื้อ',decision:''},
+     {action:'ตรวจสอบความถูกต้องของ PO: ชนิดสินค้า ราคา ปริมาณ และที่อยู่จัดส่ง',role:'Sales Officer',tool:'Bplus ERP',input:'PO ลูกค้า',output:'ข้อมูลที่ตรวจสอบแล้ว',decision:'ถ้าข้อมูลไม่ตรง ติดต่อลูกค้าเพื่อแก้ไขก่อน'},
+     {action:'บันทึก Sales Order ในระบบ Bplus',role:'Sales Officer',tool:'Bplus ERP',input:'ข้อมูล PO ที่ถูกต้อง',output:'Sales Order ในระบบ',decision:'วงเงินเกิน 500,000 บาท ต้องให้ Sales Manager อนุมัติ'},
+     {action:'แจ้ง Warehouse เพื่อจัดเตรียมสินค้า และ Logistic เพื่อวางแผนจัดส่ง',role:'Sales Officer',tool:'Line',input:'Sales Order ในระบบ',output:'Warehouse และ Logistic รับทราบ',decision:''},
+     {action:'แจ้งยืนยันออเดอร์และวันจัดส่งโดยประมาณกลับไปยังลูกค้า',role:'Sales Officer',tool:'Line',input:'ข้อมูลจาก Warehouse',output:'ลูกค้าได้รับการยืนยัน',decision:''},
+   ],
+   issues:[
+     {problem:'ลูกค้าต้องการสินค้าเร่งด่วน แต่สต็อกไม่พอ',solution:'แจ้ง Sales Manager และ Warehouse ทันที เพื่อหาทางจัดหาสินค้าเพิ่ม'},
+     {problem:'ราคาใน PO ไม่ตรงกับที่ตกลงไว้',solution:'ติดต่อลูกค้าเพื่อแก้ไข PO ก่อนบันทึกในระบบ'},
+   ]},
+  {id:'complaint',name:'การรับ Complaint ลูกค้า',icon:'📞',desc:'เมื่อลูกค้าร้องเรียนหรือมีปัญหา',
+   owner:'Sales Manager',
+   purpose:'เพื่อจัดการข้อร้องเรียนอย่างรวดเร็วและเป็นมาตรฐาน รักษาความสัมพันธ์ที่ดีกับลูกค้า',
+   scope:'พนักงาน Sales ทุกคน',
+   trigger:'เมื่อลูกค้าติดต่อมาเพื่อร้องเรียนปัญหาใดๆ',
+   roles:[{role:'Sales Officer',description:'รับเรื่องและประสานงาน'},{role:'Sales Manager',description:'ตัดสินใจแนวทางแก้ไขและชดเชย'}],
+   tools:['Line','Bplus ERP','Microsoft Excel'],
+   steps:[
+     {action:'รับฟัง Complaint จากลูกค้าและบันทึกรายละเอียดปัญหา',role:'Sales Officer',tool:'Line',input:'ข้อร้องเรียนลูกค้า',output:'บันทึกรายละเอียดปัญหา',decision:''},
+     {action:'แจ้ง Sales Manager ทราบทันที พร้อมรายละเอียดปัญหา',role:'Sales Officer',tool:'Line',input:'รายละเอียดปัญหา',output:'Sales Manager รับทราบ',decision:''},
+     {action:'ตรวจสอบข้อมูลการสั่งซื้อและจัดส่งในระบบ Bplus',role:'Sales Manager',tool:'Bplus ERP',input:'เลข Order ลูกค้า',output:'ข้อมูล Order และการจัดส่ง',decision:''},
+     {action:'ประสานงานกับแผนกที่เกี่ยวข้อง (Warehouse/Logistic) เพื่อตรวจสอบ',role:'Sales Manager',tool:'Line',input:'รายละเอียดปัญหา',output:'สาเหตุและแนวทางแก้ไข',decision:''},
+     {action:'แจ้งลูกค้าถึงสาเหตุ แนวทางแก้ไข และระยะเวลาดำเนินการ',role:'Sales Officer',tool:'Line',input:'แนวทางแก้ไข',output:'ลูกค้ารับทราบและยอมรับ',decision:'ถ้าลูกค้าไม่พอใจ ให้ Sales Manager ติดต่อโดยตรง'},
+   ],
+   issues:[
+     {problem:'ลูกค้าต้องการคืนสินค้า',solution:'แจ้ง Sales Manager อนุมัติ แล้วประสาน Logistic รับสินค้าคืน และ Accounting ออกใบลดหนี้'},
+     {problem:'ลูกค้าโกรธมากและไม่รับฟัง',solution:'ให้ Sales Manager รับสายหรือเข้าพบลูกค้าโดยตรง'},
+   ]},
+  {id:'custom',name:'กำหนด Process เอง',icon:'✏️',desc:'สร้าง SOP แบบกำหนดเองตั้งแต่ต้น',custom:true},
+],
+it:[
+  {id:'bplus_fix',name:'การแก้ไขปัญหา Bplus ERP',icon:'🔧',desc:'เมื่อพนักงานแจ้งปัญหาการใช้งาน Bplus',
+   owner:'IT Manager',
+   purpose:'เพื่อแก้ไขปัญหาระบบ Bplus ERP ได้รวดเร็ว ลดเวลาหยุดชะงักการทำงาน',
+   scope:'เจ้าหน้าที่ IT ทุกคน',
+   trigger:'เมื่อได้รับแจ้งปัญหาการใช้งาน Bplus จากพนักงานแผนกต่างๆ',
+   roles:[{role:'IT Officer',description:'รับเรื่องและแก้ไขปัญหา'},{role:'IT Manager',description:'แก้ไขปัญหาซับซ้อนและประสานผู้ผลิต'}],
+   tools:['Bplus ERP','Remote Desktop','Line'],
+   steps:[
+     {action:'รับแจ้งปัญหาจากผู้ใช้งาน บันทึกชื่อผู้แจ้ง แผนก และอาการของปัญหา',role:'IT Officer',tool:'Line',input:'การแจ้งปัญหาจากผู้ใช้',output:'บันทึกรายละเอียดปัญหา',decision:''},
+     {action:'ให้ผู้ใช้ลองล็อกเอ้าท์และล็อกอิน Bplus ใหม่',role:'IT Officer',tool:'Bplus ERP',input:'ปัญหาที่แจ้งมา',output:'ผลการทดสอบ',decision:'ถ้าปัญหาหายไป บันทึกไว้และปิด Case'},
+     {action:'เข้า Remote หรือไปที่เครื่องผู้ใช้เพื่อตรวจสอบและแก้ไข',role:'IT Officer',tool:'Remote Desktop',input:'ข้อมูลปัญหา',output:'ปัญหาได้รับการแก้ไข',decision:'ถ้าแก้ไขไม่ได้ ให้แจ้ง IT Manager'},
+     {action:'แจ้งผลการแก้ไขให้ผู้ใช้ทราบ และให้ทดสอบใช้งาน',role:'IT Officer',tool:'Line',input:'การแก้ไขที่ทำ',output:'ผู้ใช้ยืนยันใช้งานได้ปกติ',decision:''},
+   ],
+   issues:[
+     {problem:'Bplus ล่มทั้งระบบ',solution:'แจ้ง IT Manager ทันที ตรวจสอบ Server และแจ้งทุกแผนกให้ทราบ'},
+     {problem:'ข้อมูลหายหรือผิดพลาดใน Bplus',solution:'ห้ามแก้ไขเอง แจ้ง IT Manager เพื่อประสานทีม Bplus Support'},
+   ]},
+  {id:'user_mgmt',name:'การจัดการ User Bplus',icon:'👤',desc:'เพิ่ม แก้ไข หรือปิด User ในระบบ',
+   owner:'IT Manager',
+   purpose:'เพื่อควบคุมสิทธิ์การเข้าถึงระบบ Bplus ให้ถูกต้องและปลอดภัย',
+   scope:'เจ้าหน้าที่ IT ที่ดูแลระบบ Bplus',
+   trigger:'เมื่อ HR แจ้งพนักงานใหม่ พนักงานลาออก หรือต้องการเปลี่ยนสิทธิ์',
+   roles:[{role:'IT Officer',description:'ดำเนินการในระบบ Bplus'},{role:'IT Manager',description:'อนุมัติและตรวจสอบสิทธิ์'}],
+   tools:['Bplus ERP','Microsoft Excel'],
+   steps:[
+     {action:'รับใบขอ User จาก HR พร้อมข้อมูล: ชื่อ ตำแหน่ง แผนก และสิทธิ์ที่ต้องการ',role:'IT Officer',tool:'Microsoft Excel',input:'แบบฟอร์มขอ User จาก HR',output:'ข้อมูลครบถ้วนพร้อมดำเนินการ',decision:''},
+     {action:'ให้ IT Manager อนุมัติสิทธิ์การเข้าถึงก่อนดำเนินการ',role:'IT Manager',tool:'Microsoft Excel',input:'รายการสิทธิ์ที่ขอ',output:'การอนุมัติ',decision:''},
+     {action:'สร้าง/แก้ไข/ปิด User ในระบบ Bplus ตามที่ได้รับอนุมัติ',role:'IT Officer',tool:'Bplus ERP',input:'การอนุมัติจาก IT Manager',output:'User ในระบบถูกต้อง',decision:''},
+     {action:'ทดสอบ Login และสิทธิ์การใช้งาน แล้วแจ้ง HR และผู้ใช้งาน',role:'IT Officer',tool:'Bplus ERP',input:'User ที่สร้าง/แก้ไขแล้ว',output:'ผู้ใช้ Login ได้และมีสิทธิ์ถูกต้อง',decision:''},
+   ],
+   issues:[
+     {problem:'ผู้ใช้ Login ไม่ได้หลังสร้าง User แล้ว',solution:'ตรวจสอบ Password ที่ตั้งและสิทธิ์ใน Bplus ว่าถูกต้อง'},
+     {problem:'ต้องการสิทธิ์พิเศษที่ไม่มีในระบบ',solution:'แจ้ง IT Manager เพื่อประสานทีม Bplus Support'},
+   ]},
+  {id:'custom',name:'กำหนด Process เอง',icon:'✏️',desc:'สร้าง SOP แบบกำหนดเองตั้งแต่ต้น',custom:true},
+],
+hr:[
+  {id:'recruit',name:'การรับสมัครพนักงาน',icon:'🤝',desc:'เมื่อมีตำแหน่งงานว่างในบริษัท',
+   owner:'HR Manager',
+   purpose:'เพื่อให้กระบวนการรับสมัครพนักงานใหม่ของ VRSteel เป็นมาตรฐาน โปร่งใส และได้คนที่เหมาะสม',
+   scope:'เจ้าหน้าที่ HR และผู้จัดการแผนกที่มีตำแหน่งว่าง',
+   trigger:'เมื่อผู้จัดการแผนกส่งใบขออนุมัติเปิดรับสมัครพนักงาน',
+   roles:[{role:'HR Officer',description:'ประกาศรับสมัครและคัดกรองใบสมัคร'},{role:'HR Manager',description:'สัมภาษณ์และตัดสินใจรับ'},{role:'Department Manager',description:'สัมภาษณ์เทคนิคและให้ความเห็น'}],
+   tools:['Line','Microsoft Excel','Bplus ERP'],
+   steps:[
+     {action:'รับใบขออนุมัติเปิดรับสมัครจากผู้จัดการแผนก และขออนุมัติจาก HR Manager',role:'HR Officer',tool:'Microsoft Excel',input:'ใบขออนุมัติเปิดรับสมัคร',output:'การอนุมัติจาก HR Manager',decision:''},
+     {action:'ประกาศรับสมัครงานผ่านช่องทางที่กำหนด (Job Board, Line, เครือข่าย)',role:'HR Officer',tool:'Line',input:'รายละเอียดตำแหน่งงาน',output:'ประกาศรับสมัครที่เผยแพร่แล้ว',decision:''},
+     {action:'คัดกรองใบสมัครตามคุณสมบัติที่กำหนด และนัดสัมภาษณ์ผู้ที่ผ่านเกณฑ์',role:'HR Officer',tool:'Microsoft Excel',input:'ใบสมัครที่ได้รับ',output:'รายชื่อผู้ผ่านคัดเลือก',decision:''},
+     {action:'สัมภาษณ์ผู้สมัครร่วมกับผู้จัดการแผนก',role:'HR Manager',tool:'Microsoft Excel',input:'รายชื่อผู้ผ่านคัดเลือก',output:'ผู้ที่ได้รับการคัดเลือก',decision:''},
+     {action:'แจ้งผลและนัดวันเริ่มงาน พร้อมส่งเอกสารที่ต้องเตรียม',role:'HR Officer',tool:'Line',input:'ผลการสัมภาษณ์',output:'ผู้สมัครยืนยันรับงาน',decision:''},
+     {action:'บันทึกข้อมูลพนักงานใหม่ในระบบ Bplus',role:'HR Officer',tool:'Bplus ERP',input:'เอกสารพนักงานใหม่',output:'ข้อมูลพนักงานในระบบ Bplus',decision:''},
+   ],
+   issues:[
+     {problem:'ไม่มีผู้สมัครที่มีคุณสมบัติตรงตามที่ต้องการ',solution:'ปรึกษา HR Manager เพื่อพิจารณาปรับเงื่อนไขหรือขยายช่องทางประกาศ'},
+     {problem:'ผู้สมัครที่ได้รับการคัดเลือกปฏิเสธ',solution:'ติดต่อผู้สมัครลำดับถัดไปในรายชื่อสำรอง'},
+   ]},
+  {id:'onboard',name:'การปฐมนิเทศพนักงานใหม่',icon:'🌟',desc:'เมื่อพนักงานใหม่เริ่มงานวันแรก',
+   owner:'HR Manager',
+   purpose:'เพื่อให้พนักงานใหม่เข้าใจวัฒนธรรมองค์กร VRSteel นโยบายบริษัท และพร้อมเริ่มงานได้อย่างมีประสิทธิภาพ',
+   scope:'พนักงานใหม่ทุกคนและเจ้าหน้าที่ HR',
+   trigger:'เมื่อพนักงานใหม่รายงานตัววันแรก',
+   roles:[{role:'HR Officer',description:'จัดกิจกรรมปฐมนิเทศและเอกสาร'},{role:'Department Manager',description:'แนะนำทีมงานและมอบหมายงาน'}],
+   tools:['Bplus ERP','Microsoft Excel','Line'],
+   steps:[
+     {action:'เตรียมเอกสารต้อนรับ บัตรประจำตัว และอุปกรณ์ที่จำเป็น',role:'HR Officer',tool:'Microsoft Excel',input:'ข้อมูลพนักงานใหม่',output:'ชุดเอกสารต้อนรับพร้อม',decision:''},
+     {action:'แนะนำบริษัท VRSteel ผลิตภัณฑ์ โครงสร้างองค์กร และนโยบายสำคัญ',role:'HR Officer',tool:'Microsoft Excel',input:'ชุดเอกสารปฐมนิเทศ',output:'พนักงานเข้าใจภาพรวมบริษัท',decision:''},
+     {action:'ลงทะเบียนพนักงานในระบบ Bplus และระบบที่เกี่ยวข้อง',role:'HR Officer',tool:'Bplus ERP',input:'เอกสารพนักงาน',output:'พนักงานมี Account ในระบบ',decision:''},
+     {action:'พาพนักงานใหม่เยี่ยมชมพื้นที่ทำงานและแนะนำเพื่อนร่วมงาน',role:'HR Officer',tool:'Line',input:'แผนผังบริษัท',output:'พนักงานรู้จักสถานที่และเพื่อนร่วมงาน',decision:''},
+     {action:'ส่งมอบพนักงานให้ผู้จัดการแผนกเพื่อเริ่มงาน',role:'Department Manager',tool:'Line',input:'พนักงานที่ผ่านปฐมนิเทศ',output:'พนักงานพร้อมเริ่มงาน',decision:''},
+   ],
+   issues:[
+     {problem:'เอกสารพนักงานไม่ครบ',solution:'แจ้งพนักงานนำเอกสารมาส่งภายใน 3 วัน บันทึกรายการที่ยังขาด'},
+     {problem:'ระบบสร้าง Account ไม่ได้',solution:'แจ้ง IT ทันทีเพื่อแก้ไข'},
+   ]},
+  {id:'payroll',name:'การทำเงินเดือน',icon:'💰',desc:'ดำเนินการจ่ายเงินเดือนประจำเดือน',
+   owner:'HR Manager',
+   purpose:'เพื่อให้พนักงาน VRSteel ได้รับเงินเดือนที่ถูกต้อง ตรงเวลา ทุกเดือน',
+   scope:'เจ้าหน้าที่ HR และ Accounting ที่เกี่ยวข้องกับการทำเงินเดือน',
+   trigger:'ทุกสิ้นเดือน ก่อนวันจ่ายเงินเดือนอย่างน้อย 3 วันทำการ',
+   roles:[{role:'HR Officer',description:'รวบรวมข้อมูลการเข้างานและการลา'},{role:'HR Manager',description:'ตรวจสอบและอนุมัติเงินเดือน'},{role:'Accounting Officer',description:'โอนเงินเข้าบัญชีพนักงาน'}],
+   tools:['Bplus ERP','Microsoft Excel'],
+   steps:[
+     {action:'ดึงข้อมูลการเข้างาน วันลา และ OT จากระบบ Bplus',role:'HR Officer',tool:'Bplus ERP',input:'ข้อมูล Attendance ประจำเดือน',output:'รายงานการเข้างานของพนักงานทุกคน',decision:''},
+     {action:'ตรวจสอบและแก้ไขข้อมูลที่ผิดพลาด หรือขาดหาย',role:'HR Officer',tool:'Microsoft Excel',input:'รายงานการเข้างาน',output:'ข้อมูลที่ถูกต้องครบถ้วน',decision:''},
+     {action:'คำนวณเงินเดือน รวม OT หัก ลา และภาษีในระบบ Bplus',role:'HR Officer',tool:'Bplus ERP',input:'ข้อมูลที่ถูกต้อง',output:'รายการเงินเดือนพนักงานทุกคน',decision:''},
+     {action:'ให้ HR Manager ตรวจสอบและอนุมัติรายการเงินเดือน',role:'HR Manager',tool:'Bplus ERP',input:'รายการเงินเดือน',output:'เงินเดือนที่ได้รับการอนุมัติ',decision:'ถ้าพบข้อผิดพลาด ให้ HR Officer แก้ไขและส่งอนุมัติใหม่'},
+     {action:'ส่งรายการให้ Accounting เพื่อโอนเงินเข้าบัญชีพนักงาน',role:'Accounting Officer',tool:'Bplus ERP',input:'รายการเงินเดือนที่อนุมัติ',output:'พนักงานได้รับเงินเดือน',decision:''},
+   ],
+   issues:[
+     {problem:'ข้อมูลการเข้างานไม่ตรงกับความเป็นจริง',solution:'ตรวจสอบกับผู้จัดการแผนกเพื่อยืนยัน และแก้ไขในระบบก่อน Payroll'},
+     {problem:'พนักงานไม่ได้รับเงินเดือน',solution:'ตรวจสอบเลขบัญชีในระบบ Bplus และประสาน Accounting ทันที'},
+   ]},
+  {id:'custom',name:'กำหนด Process เอง',icon:'✏️',desc:'สร้าง SOP แบบกำหนดเองตั้งแต่ต้น',custom:true},
+],
+accounting:[
+  {id:'invoice',name:'การออกใบกำกับภาษี',icon:'🧾',desc:'หลังจัดส่งสินค้าให้ลูกค้าแล้ว',
+   owner:'Accounting Manager',
+   purpose:'เพื่อให้การออกใบกำกับภาษีถูกต้องตามกฎหมาย ครบถ้วน และตรงเวลา',
+   scope:'เจ้าหน้าที่บัญชีที่มีหน้าที่ออกเอกสารทางการเงิน',
+   trigger:'เมื่อ Logistic ยืนยันว่าจัดส่งสินค้าให้ลูกค้าเรียบร้อยแล้ว',
+   roles:[{role:'Accounting Officer',description:'ออกใบกำกับภาษีในระบบ'},{role:'Accounting Manager',description:'ตรวจสอบและอนุมัติ'}],
+   tools:['Bplus ERP','Microsoft Excel'],
+   steps:[
+     {action:'รับแจ้งจาก Logistic ว่าจัดส่งสินค้าเรียบร้อย พร้อมเลข Delivery Order',role:'Accounting Officer',tool:'Bplus ERP',input:'เลข DO และข้อมูลการจัดส่ง',output:'ข้อมูลพร้อมออกใบกำกับ',decision:''},
+     {action:'ตรวจสอบข้อมูลใน Bplus: ชื่อลูกค้า ที่อยู่ สินค้า จำนวน และราคา ให้ถูกต้อง',role:'Accounting Officer',tool:'Bplus ERP',input:'Sales Order และ DO',output:'ข้อมูลที่ตรวจสอบแล้ว',decision:'ถ้าข้อมูลไม่ตรง ให้แจ้ง Sales ก่อนออกเอกสาร'},
+     {action:'ออกใบกำกับภาษีในระบบ Bplus',role:'Accounting Officer',tool:'Bplus ERP',input:'ข้อมูลที่ถูกต้อง',output:'ใบกำกับภาษีในระบบ',decision:''},
+     {action:'ให้ Accounting Manager ตรวจสอบและอนุมัติ',role:'Accounting Manager',tool:'Bplus ERP',input:'ใบกำกับภาษี',output:'ใบกำกับที่ได้รับการอนุมัติ',decision:''},
+     {action:'ส่งใบกำกับภาษีให้ลูกค้าทาง Email หรือในรูปแบบที่ตกลงไว้',role:'Accounting Officer',tool:'Bplus ERP',input:'ใบกำกับที่อนุมัติ',output:'ลูกค้าได้รับใบกำกับภาษี',decision:''},
+   ],
+   issues:[
+     {problem:'ข้อมูลในใบกำกับผิดหลังส่งให้ลูกค้าแล้ว',solution:'แจ้ง Accounting Manager ทันที ออกใบลดหนี้และใบกำกับใหม่ที่ถูกต้อง'},
+     {problem:'ลูกค้าไม่ได้รับใบกำกับ',solution:'ตรวจสอบ Email ลูกค้าในระบบ และส่งใหม่อีกครั้ง'},
+   ]},
+  {id:'payment',name:'การรับชำระเงินลูกค้า',icon:'💳',desc:'เมื่อลูกค้าโอนเงินชำระค่าสินค้า',
+   owner:'Accounting Manager',
+   purpose:'เพื่อบันทึกการรับชำระเงินถูกต้อง ออกใบเสร็จทันที และปิดยอดลูกหนี้',
+   scope:'เจ้าหน้าที่บัญชีที่ดูแลการรับชำระเงิน',
+   trigger:'เมื่อธนาคารแจ้งยอดเงินเข้า หรือลูกค้าส่งหลักฐานการโอน',
+   roles:[{role:'Accounting Officer',description:'บันทึกการรับเงินและออกใบเสร็จ'},{role:'Accounting Manager',description:'ตรวจสอบยอดเงิน'}],
+   tools:['Bplus ERP','Microsoft Excel'],
+   steps:[
+     {action:'ตรวจสอบยอดเงินเข้าในบัญชีบริษัท และจับคู่กับใบกำกับของลูกค้า',role:'Accounting Officer',tool:'Microsoft Excel',input:'Statement ธนาคาร',output:'ยอดเงินที่จับคู่แล้ว',decision:'ถ้าจำนวนเงินไม่ตรง ติดต่อ Sales ตรวจสอบกับลูกค้า'},
+     {action:'บันทึกการรับชำระเงินในระบบ Bplus และปิดยอดลูกหนี้',role:'Accounting Officer',tool:'Bplus ERP',input:'ข้อมูลการรับเงิน',output:'ยอดลูกหนี้ถูกปิดในระบบ',decision:''},
+     {action:'ออกใบเสร็จรับเงินในระบบ Bplus',role:'Accounting Officer',tool:'Bplus ERP',input:'การรับชำระที่บันทึก',output:'ใบเสร็จรับเงิน',decision:''},
+     {action:'ส่งใบเสร็จให้ลูกค้า และแจ้ง Sales ทราบ',role:'Accounting Officer',tool:'Bplus ERP',input:'ใบเสร็จรับเงิน',output:'ลูกค้าและ Sales ได้รับแจ้ง',decision:''},
+   ],
+   issues:[
+     {problem:'ยอดเงินที่โอนมาไม่ตรงกับใบกำกับ',solution:'แจ้ง Sales ให้ติดต่อลูกค้าตรวจสอบ ห้ามบันทึกจนกว่าจะได้ยืนยัน'},
+     {problem:'ลูกค้าขอใบเสร็จย้อนหลัง',solution:'ตรวจสอบในระบบ Bplus และออกสำเนาให้'},
+   ]},
+  {id:'ar',name:'การติดตามลูกหนี้ (AR)',icon:'📊',desc:'ติดตามลูกค้าที่ค้างชำระเงิน',
+   owner:'Accounting Manager',
+   purpose:'เพื่อให้ลูกหนี้การค้าของ VRSteel ได้รับการติดตามอย่างเป็นระบบ ลดหนี้ค้างชำระ',
+   scope:'เจ้าหน้าที่บัญชีและ Sales ที่รับผิดชอบลูกค้า',
+   trigger:'ทุกสัปดาห์ หรือเมื่อมีลูกหนี้เกินกำหนดชำระ',
+   roles:[{role:'Accounting Officer',description:'ดึงรายงานและติดตามลูกหนี้'},{role:'Sales Officer',description:'ประสานงานกับลูกค้า'},{role:'Accounting Manager',description:'กำกับและตัดสินใจกรณีพิเศษ'}],
+   tools:['Bplus ERP','Microsoft Excel','Line'],
+   steps:[
+     {action:'ดึงรายงาน AR Aging จากระบบ Bplus เพื่อดูยอดค้างชำระทั้งหมด',role:'Accounting Officer',tool:'Bplus ERP',input:'ข้อมูลลูกหนี้ในระบบ',output:'รายงาน AR Aging',decision:''},
+     {action:'จัดกลุ่มลูกหนี้ตามอายุหนี้ (0-30, 31-60, 61-90, 90+ วัน)',role:'Accounting Officer',tool:'Microsoft Excel',input:'รายงาน AR Aging',output:'รายการลูกหนี้จัดกลุ่มแล้ว',decision:''},
+     {action:'แจ้ง Sales ให้ติดต่อลูกค้าที่ค้างชำระ และบันทึกผลการติดตาม',role:'Sales Officer',tool:'Line',input:'รายชื่อลูกค้าที่ต้องติดตาม',output:'บันทึกผลการติดตาม',decision:'ถ้าลูกค้าค้างเกิน 90 วัน ให้แจ้ง Accounting Manager'},
+     {action:'รายงานผล AR ให้ Accounting Manager ทุกสัปดาห์',role:'Accounting Manager',tool:'Microsoft Excel',input:'บันทึกผลการติดตาม',output:'รายงาน AR Weekly',decision:''},
+   ],
+   issues:[
+     {problem:'ลูกค้าปฏิเสธการชำระและข้อโต้แย้ง',solution:'แจ้ง Sales Manager และ Accounting Manager เพื่อพิจารณาร่วมกัน'},
+     {problem:'ลูกค้าขอเลื่อนกำหนดชำระ',solution:'ต้องได้รับการอนุมัติจาก Accounting Manager ก่อนตกลงกับลูกค้า'},
+   ]},
+  {id:'custom',name:'กำหนด Process เอง',icon:'✏️',desc:'สร้าง SOP แบบกำหนดเองตั้งแต่ต้น',custom:true},
+],
+logistic:[
+  {id:'delivery',name:'การวางแผนจัดส่งสินค้า',icon:'🗺️',desc:'วางแผนและดำเนินการจัดส่งเหล็ก',
+   owner:'Logistic Manager',
+   purpose:'เพื่อให้การจัดส่งเหล็กแก่ลูกค้า VRSteel ตรงเวลา ครบถ้วน และปลอดภัย',
+   scope:'เจ้าหน้าที่ Logistic และพนักงานขับรถทุกคน',
+   trigger:'เมื่อ Sales ยืนยัน Order และ Warehouse แจ้งสินค้าพร้อมส่ง',
+   roles:[{role:'Logistic Officer',description:'วางแผนเส้นทางและออกใบส่งของ'},{role:'พนักงานขับรถ',description:'จัดส่งสินค้าและรับลายเซ็น'},{role:'Logistic Manager',description:'อนุมัติและติดตาม'}],
+   tools:['Bplus ERP','Line','Google Maps'],
+   steps:[
+     {action:'รับข้อมูล Order ที่พร้อมส่งจาก Warehouse และตรวจสอบที่อยู่จัดส่ง',role:'Logistic Officer',tool:'Bplus ERP',input:'Sales Order ที่ Warehouse เตรียมแล้ว',output:'รายการสินค้าพร้อมที่อยู่จัดส่ง',decision:''},
+     {action:'วางแผนเส้นทางจัดส่ง จัดกลุ่ม Order ตามพื้นที่ และมอบหมายรถ',role:'Logistic Officer',tool:'Google Maps',input:'รายการส่งและที่อยู่',output:'แผนการจัดส่งประจำวัน',decision:'ถ้าสินค้าเหล็กหนักเกินน้ำหนักรถ ต้องแบ่งหลายเที่ยว'},
+     {action:'ออกใบส่งของ (Delivery Order) ในระบบ Bplus',role:'Logistic Officer',tool:'Bplus ERP',input:'แผนการจัดส่ง',output:'ใบส่งของ (DO)',decision:''},
+     {action:'นัดหมายเวลาจัดส่งกับลูกค้า แล้วมอบใบส่งของให้พนักงานขับรถ',role:'Logistic Officer',tool:'Line',input:'DO และแผนเส้นทาง',output:'ลูกค้ายืนยันนัดรับ',decision:''},
+     {action:'จัดส่งสินค้า รับลายเซ็นลูกค้า และถ่ายรูปหลักฐาน',role:'พนักงานขับรถ',tool:'Line',input:'ใบส่งของ',output:'ใบส่งของที่ลงนามแล้ว',decision:'ถ้าลูกค้าไม่รับสินค้า แจ้ง Logistic Officer ทันที'},
+     {action:'บันทึกยืนยันการจัดส่งในระบบ Bplus และแจ้ง Accounting ออกใบกำกับ',role:'Logistic Officer',tool:'Bplus ERP',input:'ใบส่งของที่ลงนาม',output:'การจัดส่งบันทึกในระบบ',decision:''},
+   ],
+   issues:[
+     {problem:'ลูกค้าไม่อยู่รับสินค้า',solution:'โทรแจ้งลูกค้าทันที ถ้าติดต่อไม่ได้แจ้ง Logistic Manager และ Sales'},
+     {problem:'สินค้าเสียหายระหว่างขนส่ง',solution:'ถ่ายรูปทันที แจ้ง Logistic Manager และ Sales เพื่อแก้ไขกับลูกค้า'},
+   ]},
+  {id:'return',name:'การรับสินค้าคืน',icon:'↩️',desc:'เมื่อลูกค้าต้องการคืนสินค้า',
+   owner:'Logistic Manager',
+   purpose:'เพื่อจัดการการรับสินค้าคืนจากลูกค้าอย่างเป็นระบบ และส่งข้อมูลต่อให้ Warehouse และ Accounting',
+   scope:'เจ้าหน้าที่ Logistic และ Warehouse',
+   trigger:'เมื่อ Sales อนุมัติให้ลูกค้าคืนสินค้า',
+   roles:[{role:'Logistic Officer',description:'ประสานงานรับสินค้าคืน'},{role:'พนักงานขับรถ',description:'ไปรับสินค้าจากลูกค้า'},{role:'Warehouse Officer',description:'ตรวจสอบสภาพสินค้าที่รับคืน'}],
+   tools:['Bplus ERP','Line'],
+   steps:[
+     {action:'รับการอนุมัติรับคืนสินค้าจาก Sales Manager พร้อมรายละเอียดสินค้า',role:'Logistic Officer',tool:'Line',input:'การอนุมัติจาก Sales Manager',output:'ข้อมูลการรับคืน',decision:''},
+     {action:'นัดวันและเวลาไปรับสินค้าคืนจากลูกค้า',role:'Logistic Officer',tool:'Line',input:'ข้อมูลที่อยู่ลูกค้า',output:'นัดหมายที่ตกลงกัน',decision:''},
+     {action:'ไปรับสินค้าคืน ถ่ายรูปสภาพสินค้า และให้ลูกค้าเซ็นรับคืน',role:'พนักงานขับรถ',tool:'Line',input:'นัดหมาย',output:'สินค้าคืนพร้อมหลักฐาน',decision:''},
+     {action:'นำสินค้าคืนส่ง Warehouse เพื่อตรวจสอบสภาพ',role:'Warehouse Officer',tool:'Bplus ERP',input:'สินค้าที่รับคืน',output:'ผลตรวจสอบสภาพสินค้า',decision:'ถ้าสินค้าไม่เสียหาย รับเข้าสต็อก ถ้าเสียหายแจ้ง Logistic Manager'},
+     {action:'แจ้ง Accounting เพื่อออกใบลดหนี้หรือดำเนินการตามที่ตกลงกับลูกค้า',role:'Logistic Officer',tool:'Line',input:'ผลตรวจสอบ',output:'Accounting รับทราบและดำเนินการ',decision:''},
+   ],
+   issues:[
+     {problem:'สินค้าที่รับคืนเสียหายและลูกค้าอ้างว่าเป็นปัญหาจากการจัดส่ง',solution:'แจ้ง Logistic Manager และดูรูปถ่ายหลักฐานตอนจัดส่ง เพื่อพิจารณาความรับผิดชอบ'},
+   ]},
+  {id:'custom',name:'กำหนด Process เอง',icon:'✏️',desc:'สร้าง SOP แบบกำหนดเองตั้งแต่ต้น',custom:true},
+],
+warehouse:[
+  {id:'gr',name:'การรับเหล็กเข้าคลัง (GR)',icon:'📥',desc:'เมื่อมีสินค้าเหล็กมาส่งที่คลัง',
+   owner:'Warehouse Manager',
+   purpose:'เพื่อรับเหล็กเข้าคลังอย่างถูกต้อง ตรวจสอบคุณภาพ และบันทึกสต็อกในระบบ Bplus ได้ทันที',
+   scope:'เจ้าหน้าที่คลังสินค้าทุกคนที่มีหน้าที่รับสินค้า',
+   trigger:'เมื่อรถขนส่งเหล็กมาถึงหน้าคลังสินค้า',
+   roles:[{role:'Warehouse Officer',description:'รับสินค้าและตรวจนับ'},{role:'Warehouse Manager',description:'อนุมัติการรับและแก้ไขปัญหา'},{role:'QC Officer',description:'ตรวจสอบคุณภาพสินค้า'}],
+   tools:['Bplus ERP','เครื่องชั่งน้ำหนัก','เทปวัด'],
+   steps:[
+     {action:'ตรวจสอบใบส่งสินค้าจากผู้ขาย และจับคู่กับ PO ในระบบ Bplus',role:'Warehouse Officer',tool:'Bplus ERP',input:'ใบส่งสินค้าจากผู้ขาย',output:'PO ที่ตรงกันในระบบ',decision:'ถ้าไม่มี PO ในระบบ ห้ามรับสินค้า แจ้ง Warehouse Manager ทันที'},
+     {action:'ตรวจนับจำนวนและขนาดเหล็ก เทียบกับใบส่งสินค้า',role:'Warehouse Officer',tool:'เทปวัด',input:'สินค้าที่มาส่งและใบส่งสินค้า',output:'ผลการตรวจนับ',decision:'ถ้าจำนวนหรือขนาดไม่ตรง ห้ามเซ็นรับ แจ้ง Warehouse Manager'},
+     {action:'ตรวจสอบคุณภาพ: สภาพสินค้า ไม่มีสนิม บิดงอ หรือเสียหาย',role:'QC Officer',tool:'เทปวัด',input:'สินค้าที่ผ่านการตรวจนับ',output:'ผลการตรวจ QC',decision:'ถ้าสินค้าไม่ผ่าน QC ห้ามรับ แจ้ง Warehouse Manager'},
+     {action:'เซ็นรับและถ่ายรูปสินค้าเป็นหลักฐาน',role:'Warehouse Officer',tool:'Bplus ERP',input:'สินค้าที่ผ่าน QC',output:'หลักฐานการรับสินค้า',decision:''},
+     {action:'บันทึกรับสินค้าเข้าระบบ Bplus (Goods Receipt)',role:'Warehouse Officer',tool:'Bplus ERP',input:'ใบส่งสินค้าและ PO',output:'สต็อกเพิ่มขึ้นในระบบ Bplus',decision:''},
+     {action:'จัดเก็บเหล็กในพื้นที่ที่กำหนด และติดป้าย Location',role:'Warehouse Officer',tool:'Bplus ERP',input:'สินค้าที่รับเข้า',output:'เหล็กจัดเก็บเรียบร้อย มี Location ชัดเจน',decision:''},
+   ],
+   issues:[
+     {problem:'จำนวนเหล็กที่ส่งมาไม่ครบ',solution:'ห้ามเซ็นรับจำนวนเต็ม บันทึกจำนวนจริงในใบส่งสินค้า แจ้ง Warehouse Manager และ Accounting'},
+     {problem:'เหล็กไม่ผ่าน QC (สนิม/บิดงอ)',solution:'ปฏิเสธการรับสินค้า ถ่ายรูปหลักฐาน แจ้ง Warehouse Manager เพื่อติดต่อผู้ขาย'},
+     {problem:'ระบบ Bplus ไม่สามารถบันทึกได้',solution:'แจ้ง IT ทันที และบันทึกข้อมูลลงกระดาษสำรองไว้ก่อน'},
+   ]},
+  {id:'gi',name:'การเบิกจ่ายเหล็กออกคลัง (GI)',icon:'📤',desc:'เมื่อต้องจ่ายสินค้าให้ Logistic',
+   owner:'Warehouse Manager',
+   purpose:'เพื่อให้การเบิกจ่ายเหล็กออกคลังถูกต้อง ตรงกับ Order ลูกค้า และบันทึกในระบบ Bplus ได้ทันที',
+   scope:'เจ้าหน้าที่คลังสินค้าที่มีหน้าที่จ่ายสินค้า',
+   trigger:'เมื่อ Logistic แจ้งว่ามีการจัดส่งสินค้าให้ลูกค้า พร้อมเลข Sales Order',
+   roles:[{role:'Warehouse Officer',description:'หยิบสินค้าและบันทึกในระบบ'},{role:'Warehouse Manager',description:'อนุมัติการเบิกจ่าย'}],
+   tools:['Bplus ERP','เครื่องชั่งน้ำหนัก'],
+   steps:[
+     {action:'รับใบขอเบิกสินค้าจาก Logistic พร้อมเลข Sales Order',role:'Warehouse Officer',tool:'Bplus ERP',input:'เลข Sales Order และใบขอเบิก',output:'ยืนยันสินค้าในระบบ',decision:'ถ้าไม่มีใบขอเบิกหรือ SO ห้ามจ่ายสินค้า'},
+     {action:'ตรวจสอบสต็อกและหาตำแหน่งเหล็กในคลัง',role:'Warehouse Officer',tool:'Bplus ERP',input:'รายการสินค้าที่ต้องจ่าย',output:'ตำแหน่งเหล็กในคลัง',decision:'ถ้าสต็อกไม่พอ แจ้ง Warehouse Manager และ Sales ทันที'},
+     {action:'หยิบสินค้าตาม Location และตรวจนับให้ครบ',role:'Warehouse Officer',tool:'เครื่องชั่งน้ำหนัก',input:'ตำแหน่งสินค้า',output:'สินค้าที่หยิบออกมา',decision:''},
+     {action:'บันทึกเบิกจ่ายสินค้าออกระบบ Bplus (Goods Issue)',role:'Warehouse Officer',tool:'Bplus ERP',input:'สินค้าที่หยิบ',output:'สต็อกลดลงในระบบ Bplus',decision:''},
+     {action:'ส่งมอบสินค้าให้ Logistic พร้อมใบส่งสินค้า',role:'Warehouse Officer',tool:'Bplus ERP',input:'สินค้าและใบส่งของ',output:'Logistic ได้รับสินค้า',decision:''},
+   ],
+   issues:[
+     {problem:'สต็อกในระบบไม่ตรงกับของจริง',solution:'ห้ามจ่ายสินค้า แจ้ง Warehouse Manager เพื่อนับสต็อกและแก้ไขระบบก่อน'},
+     {problem:'สินค้าที่หยิบมาไม่ตรงกับที่ Order',solution:'ตรวจสอบอีกครั้ง ถ้าไม่มีสินค้าตรงสเปค แจ้ง Sales ให้ประสานลูกค้า'},
+   ]},
+  {id:'stockcount',name:'การนับสต็อกประจำเดือน',icon:'🔢',desc:'ตรวจนับสินค้าคงคลังประจำเดือน',
+   owner:'Warehouse Manager',
+   purpose:'เพื่อให้สต็อกเหล็กในระบบ Bplus ตรงกับของจริงในคลัง และตรวจพบความผิดพลาดได้รวดเร็ว',
+   scope:'เจ้าหน้าที่คลังสินค้าทุกคน',
+   trigger:'ทุกสิ้นเดือน หรือตามกำหนดของ Warehouse Manager',
+   roles:[{role:'Warehouse Officer',description:'ตรวจนับสินค้า'},{role:'Warehouse Manager',description:'กำกับการนับและอนุมัติผล'},{role:'Accounting Officer',description:'ตรวจสอบและบันทึกผลสต็อก'}],
+   tools:['Bplus ERP','Microsoft Excel','เทปวัด'],
+   steps:[
+     {action:'Warehouse Manager แจ้งวันนับสต็อก และห้ามรับ-จ่ายสินค้าระหว่างนับ',role:'Warehouse Manager',tool:'Line',input:'กำหนดการนับสต็อก',output:'พนักงานทุกคนรับทราบ',decision:''},
+     {action:'ดึง Stock List จากระบบ Bplus เป็นเอกสารอ้างอิง',role:'Warehouse Officer',tool:'Bplus ERP',input:'ข้อมูลสต็อกในระบบ',output:'รายการสต็อกทั้งหมด',decision:''},
+     {action:'ตรวจนับสินค้าจริงทีละรายการ พร้อมวัดขนาดและบันทึกลงกระดาษ',role:'Warehouse Officer',tool:'เทปวัด',input:'สินค้าในคลังและ Stock List',output:'ผลการนับสต็อกจริง',decision:''},
+     {action:'เปรียบเทียบผลนับจริงกับระบบ Bplus และบันทึกส่วนต่าง',role:'Warehouse Manager',tool:'Microsoft Excel',input:'ผลนับจริงและข้อมูลระบบ',output:'รายการสินค้าที่มีส่วนต่าง',decision:'ถ้ามีส่วนต่างมาก ให้นับซ้ำอีกครั้ง'},
+     {action:'อนุมัติและบันทึกแก้ไขสต็อกในระบบ Bplus',role:'Accounting Officer',tool:'Bplus ERP',input:'รายการส่วนต่างที่อนุมัติ',output:'สต็อกในระบบ Bplus ตรงกับจริง',decision:''},
+   ],
+   issues:[
+     {problem:'พบสินค้าหายในคลังจำนวนมาก',solution:'แจ้ง Warehouse Manager ทันที ห้ามแก้ไขระบบก่อนได้รับการอนุมัติ'},
+     {problem:'ไม่สามารถระบุ Location ของสินค้าบางรายการ',solution:'ค้นหาจากพื้นที่ทั้งคลัง บันทึก Location ใหม่ที่ถูกต้อง'},
+   ]},
+  {id:'custom',name:'กำหนด Process เอง',icon:'✏️',desc:'สร้าง SOP แบบกำหนดเองตั้งแต่ต้น',custom:true},
+],
+graphic:[
+  {id:'brief',name:'การรับ Brief งานออกแบบ',icon:'📝',desc:'เมื่อได้รับงานออกแบบจากทีม',
+   owner:'Graphic Design Lead',
+   purpose:'เพื่อให้ทีม Graphic Design เข้าใจความต้องการของงานก่อนลงมือทำ ลดการแก้ไขซ้ำซาก',
+   scope:'นักออกแบบกราฟิกทุกคน',
+   trigger:'เมื่อได้รับคำของานออกแบบจากแผนก Sales หรือ Marketing',
+   roles:[{role:'Graphic Designer',description:'รับ Brief และออกแบบ'},{role:'Graphic Design Lead',description:'ตรวจสอบและอนุมัติงาน'}],
+   tools:['Line','Adobe Illustrator','Microsoft Excel'],
+   steps:[
+     {action:'รับ Brief จากผู้ขอ บันทึก: วัตถุประสงค์ กลุ่มเป้าหมาย ขนาด สี และ Deadline',role:'Graphic Designer',tool:'Line',input:'Brief จากผู้ขอ',output:'ข้อมูล Brief ที่ครบถ้วน',decision:'ถ้าข้อมูล Brief ไม่ครบ ให้ถามผู้ขอก่อนเริ่มงาน'},
+     {action:'ยืนยัน Deadline กับผู้ขอ และบันทึกลงในตาราง Job Schedule',role:'Graphic Designer',tool:'Microsoft Excel',input:'Brief ที่ครบถ้วน',output:'Deadline ที่ยืนยันแล้ว',decision:'ถ้า Deadline ไม่สามารถทำได้ทัน แจ้ง Lead ทันที'},
+     {action:'ออกแบบตาม Brief และ Brand Guideline ของ VRSteel',role:'Graphic Designer',tool:'Adobe Illustrator',input:'Brief และ Brand Guideline',output:'งานออกแบบ Draft แรก',decision:''},
+     {action:'ส่ง Draft ให้ Graphic Design Lead ตรวจสอบก่อนส่งผู้ขอ',role:'Graphic Design Lead',tool:'Line',input:'Draft งาน',output:'Feedback หรือการอนุมัติ',decision:'ถ้ายังไม่ผ่าน ให้แก้ไขตาม Feedback'},
+     {action:'ส่งงานให้ผู้ขอรีวิว พร้อมบันทึก Feedback สำหรับแก้ไข',role:'Graphic Designer',tool:'Line',input:'งานที่ Lead อนุมัติ',output:'Feedback จากผู้ขอ',decision:''},
+   ],
+   issues:[
+     {problem:'Brief ไม่ชัดเจนและผู้ขอต้องการเปลี่ยนแปลงบ่อย',solution:'ขอ Brief เป็นลายลักษณ์อักษรก่อนเสมอ และกำหนดจำนวน Revision ที่รวมอยู่ในงาน'},
+     {problem:'ไม่สามารถทำได้ทัน Deadline',solution:'แจ้ง Lead และผู้ขอล่วงหน้าอย่างน้อย 1 วัน พร้อมเหตุผลและ Deadline ใหม่'},
+   ]},
+  {id:'delivery',name:'การส่งมอบงานออกแบบ',icon:'📨',desc:'ส่งไฟล์ Final ให้ผู้ขอ',
+   owner:'Graphic Design Lead',
+   purpose:'เพื่อให้การส่งมอบงานออกแบบ Final เป็นมาตรฐาน ไฟล์ถูกต้อง และจัดเก็บเรียบร้อย',
+   scope:'นักออกแบบกราฟิกทุกคน',
+   trigger:'เมื่อผู้ขอ Approve งานออกแบบแล้ว',
+   roles:[{role:'Graphic Designer',description:'เตรียมไฟล์ Final และส่งมอบ'},{role:'Graphic Design Lead',description:'ตรวจสอบไฟล์ก่อนส่ง'}],
+   tools:['Adobe Illustrator','Line','Google Drive'],
+   steps:[
+     {action:'เตรียมไฟล์ Final ตามรูปแบบที่ผู้ขอต้องการ (AI, PDF, PNG, JPG)',role:'Graphic Designer',tool:'Adobe Illustrator',input:'งานที่ Approve แล้ว',output:'ไฟล์ Final ทุก Format',decision:''},
+     {action:'ตรวจสอบไฟล์ครั้งสุดท้าย: ความละเอียด สี Font และขนาด',role:'Graphic Design Lead',tool:'Adobe Illustrator',input:'ไฟล์ Final',output:'ไฟล์ที่ผ่านการตรวจสอบ',decision:''},
+     {action:'Upload ไฟล์ขึ้น Google Drive ในโฟลเดอร์ที่กำหนด และส่ง Link ให้ผู้ขอ',role:'Graphic Designer',tool:'Google Drive',input:'ไฟล์ที่ตรวจสอบแล้ว',output:'ผู้ขอได้รับไฟล์',decision:''},
+     {action:'บันทึกชื่องาน วันที่ และ Link ลงในทะเบียนงาน',role:'Graphic Designer',tool:'Microsoft Excel',input:'ข้อมูลงาน',output:'งานบันทึกในทะเบียนครบถ้วน',decision:''},
+   ],
+   issues:[
+     {problem:'ผู้ขอต้องการแก้ไขหลังรับไฟล์ Final แล้ว',solution:'แจ้ง Lead ประเมินว่าเป็น Revision ใหม่หรือเป็น Error ของงาน'},
+     {problem:'ไฟล์ขนาดใหญ่ส่งทาง Line ไม่ได้',solution:'Upload ขึ้น Google Drive และส่ง Link แทน'},
+   ]},
+  {id:'custom',name:'กำหนด Process เอง',icon:'✏️',desc:'สร้าง SOP แบบกำหนดเองตั้งแต่ต้น',custom:true},
+],
+};
+
+// ===== STATE =====
+const S = {
+  screen: 0,
+  dept: null,
+  tpl: null,
+  processName: '',
+  owner: '',
+  version: '1.0',
+  effectiveDate: new Date().toISOString().split('T')[0],
+  purpose: '',
+  scope: '',
+  trigger: '',
+  roles: [],
+  tools: [],
+  steps: [],
+  issues: [],
+  relatedDocs: '',
+  reviewFrequency: 'ทุก 6 เดือน',
+  editingStep: -1,
+  editingIssue: -1,
+  activePanel: 'sop',
+};
+
+const SCREENS = 6;
+
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') }
+
+// ===== PROGRESS =====
+function renderDots(){
+  document.getElementById('dots').innerHTML = Array.from({length:SCREENS},(_,i)=>
+    `<div class="dot ${i<S.screen?'done':i===S.screen?'active':''}"></div>`
+  ).join('');
+}
+
+// ===== SCREEN 0: Department =====
+function s0(){
+  return `<div class="card">
+    <div class="card-title">เลือกแผนกของคุณ</div>
+    <div class="card-sub">กดเลือกแผนกที่คุณต้องการสร้าง SOP</div>
+    <div class="dept-grid">
+      ${DEPTS.map(d=>`
+        <div class="dept-btn ${S.dept===d.id?'sel':''}" onclick="selDept('${d.id}')">
+          <div class="di">${d.icon}</div>
+          <div class="dn">${d.name}</div>
+        </div>`).join('')}
+    </div>
+    <div class="nav"><span></span><button class="nav-next" onclick="next0()">ถัดไป →</button></div>
+  </div>`;
+}
+
+function selDept(id){ S.dept=id; render(); }
+function next0(){
+  if(!S.dept){alert('กรุณาเลือกแผนกก่อน');return;}
+  S.screen=1; render();
+}
+
+// ===== SCREEN 1: Process Selection =====
+function s1(){
+  const d = DEPTS.find(x=>x.id===S.dept);
+  const procs = TPL[S.dept]||[];
+  return `<div class="card">
+    <div class="card-title">${d.icon} ${d.name}</div>
+    <div class="card-sub">เลือก Process ที่ต้องการสร้าง SOP หรือกำหนดเอง</div>
+    <div class="proc-list">
+      ${procs.map(p=>`
+        <div class="proc-btn ${S.tpl&&S.tpl.id===p.id?'sel':''}" onclick="selProc('${p.id}')">
+          <div class="pi">${p.icon}</div>
+          <div><div class="pt">${p.name}</div><div class="pd">${p.desc}</div></div>
+        </div>`).join('')}
+    </div>
+    <div class="nav">
+      <button class="nav-back" onclick="back()">←</button>
+      <button class="nav-next" onclick="next1()">ถัดไป →</button>
+    </div>
+  </div>`;
+}
+
+function selProc(id){
+  const procs = TPL[S.dept]||[];
+  S.tpl = procs.find(p=>p.id===id)||null;
+  render();
+}
+
+function next1(){
+  if(!S.tpl){alert('กรุณาเลือก Process ก่อน');return;}
+  // Load template data
+  if(!S.tpl.custom){
+    S.processName = S.tpl.name;
+    S.owner = S.tpl.owner||'';
+    S.purpose = S.tpl.purpose||'';
+    S.scope = S.tpl.scope||'';
+    S.trigger = S.tpl.trigger||'';
+    S.roles = S.tpl.roles ? S.tpl.roles.map(r=>({...r})) : [];
+    S.tools = S.tpl.tools ? [...S.tpl.tools] : [];
+    S.steps = S.tpl.steps ? S.tpl.steps.map(s=>({...s})) : [];
+    S.issues = S.tpl.issues ? S.tpl.issues.map(i=>({...i})) : [];
+  } else {
+    S.processName=''; S.owner=''; S.purpose=''; S.scope=''; S.trigger='';
+    S.roles=[{role:'',description:''}]; S.tools=['Bplus ERP',''];
+    S.steps=[{action:'',role:'',tool:'',input:'',output:'',decision:''}];
+    S.issues=[{problem:'',solution:''}];
+  }
+  S.screen=2; render();
+}
+
+// ===== SCREEN 2: Basic Info =====
+function s2(){
+  return `<div class="card">
+    <div class="card-title">ข้อมูลพื้นฐาน</div>
+    <div class="card-sub">ตรวจสอบและแก้ไขข้อมูลก่อนไปขั้นตอนถัดไป</div>
+    <div class="field">
+      <label>ชื่อ Process / SOP</label>
+      <input type="text" value="${esc(S.processName)}" oninput="S.processName=this.value" placeholder="ชื่อ Process ที่จะสร้าง SOP">
+    </div>
+    <div class="field">
+      <label>เจ้าของ Process (ชื่อหรือตำแหน่ง)</label>
+      <input type="text" value="${esc(S.owner)}" oninput="S.owner=this.value" placeholder="เช่น Warehouse Manager, ทีม Sales">
+    </div>
+    <div class="field">
+      <label>วัตถุประสงค์ — ทำ SOP นี้เพื่ออะไร?</label>
+      <textarea oninput="S.purpose=this.value">${esc(S.purpose)}</textarea>
+    </div>
+    <div class="field">
+      <label>เมื่อไหร่ถึงต้องใช้ SOP นี้?</label>
+      <input type="text" value="${esc(S.trigger)}" oninput="S.trigger=this.value" placeholder="เช่น เมื่อลูกค้าสั่งซื้อสินค้า">
+    </div>
+    <div class="nav">
+      <button class="nav-back" onclick="back()">←</button>
+      <button class="nav-next" onclick="next2()">ถัดไป →</button>
+    </div>
+  </div>`;
+}
+
+function next2(){
+  if(!S.processName.trim()){alert('กรุณากรอกชื่อ Process');return;}
+  if(!S.owner.trim()){alert('กรุณากรอกชื่อเจ้าของ Process');return;}
+  S.screen=3; render();
+}
+
+// ===== SCREEN 3: Steps =====
+function s3(){
+  const roles=getMasterRoles(), tools=getMasterTools();
+  const roleOpts = ['<option value="">-- เลือก --</option>',
+    ...roles.map(r=>`<option>${esc(r)}</option>`)].join('');
+  const toolOpts = ['<option value="">-- เลือก --</option>',
+    ...tools.map(t=>`<option>${esc(t)}</option>`)].join('');
+
+  const stepCards = S.steps.map((st,i)=>`
+    <div class="step-card">
+      <div class="step-card-top">
+        <div class="step-badge">${i+1}</div>
+        <div class="step-action">${esc(st.action)||'<span style="color:#94a3b8;font-weight:400">ยังไม่ได้กรอกการดำเนินการ</span>'}</div>
+      </div>
+      <div class="step-meta">
+        ${st.role?`<span class="chip role">👤 ${esc(st.role)}</span>`:''}
+        ${st.tool?`<span class="chip tool">🔧 ${esc(st.tool)}</span>`:''}
+        ${st.output?`<span class="chip">📤 ${esc(st.output)}</span>`:''}
+        ${st.decision?`<span class="chip dec">🔀 ${esc(st.decision)}</span>`:''}
+      </div>
+      <div class="step-actions">
+        <button class="sbtn sbtn-edit" onclick="editStep(${i})">✏️ แก้ไข</button>
+        ${S.steps.length>1?`<button class="sbtn sbtn-del" onclick="delStep(${i})">🗑️ ลบ</button>`:''}
+      </div>
+    </div>`).join('');
+
+  return `<div class="card">
+    <div class="card-title">📋 ขั้นตอนการทำงาน</div>
+    <div class="card-sub">ตรวจสอบและแก้ไขขั้นตอน กดที่ขั้นตอนเพื่อแก้ไขรายละเอียด</div>
+    <div class="step-cards">${stepCards}</div>
+    <button class="add-step-btn" onclick="addStep()">+ เพิ่มขั้นตอน</button>
+    <div class="nav">
+      <button class="nav-back" onclick="back()">←</button>
+      <button class="nav-next" onclick="S.screen=4;render()">ถัดไป →</button>
+    </div>
+  </div>`;
+}
+
+function getMasterRoles(){
+  if(_masterRolesCache) return _masterRolesCache;
+  return DEFAULT_ROLES.slice();
+}
+function getMasterTools(){
+  if(_masterToolsCache) return _masterToolsCache;
+  return DEFAULT_TOOLS.slice();
+}
+
+function editStep(i){
+  S.editingStep=i;
+  const st=S.steps[i];
+  const roles=getMasterRoles();
+  const tools=getMasterTools();
+  const roleOpts=['<option value="">-- เลือก --</option>',...roles.map(r=>`<option ${r===st.role?'selected':''}>${esc(r)}</option>`)].join('');
+  const toolOpts=['<option value="">-- เลือก --</option>',...tools.map(t=>`<option ${t===st.tool?'selected':''}>${esc(t)}</option>`)].join('');
+  document.getElementById('modalTitle').textContent='แก้ไขขั้นตอนที่ '+(i+1);
+  document.getElementById('m-action').value=st.action||'';
+  document.getElementById('m-role').innerHTML=roleOpts;
+  document.getElementById('m-tool').innerHTML=toolOpts;
+  document.getElementById('m-output').value=st.output||'';
+  document.getElementById('m-decision').value=st.decision||'';
+  document.getElementById('stepModal').classList.add('open');
+}
+
+function addStep(){
+  S.steps.push({action:'',role:S.roles[0]?.role||'',tool:S.tools[0]||'',input:'',output:'',decision:''});
+  editStep(S.steps.length-1);
+}
+
+function delStep(i){ if(confirm('ลบขั้นตอนนี้?')){S.steps.splice(i,1);render();} }
+
+function closeModal(){ document.getElementById('stepModal').classList.remove('open'); }
+function saveStep(){
+  const i=S.editingStep;
+  S.steps[i]={
+    action:document.getElementById('m-action').value,
+    role:document.getElementById('m-role').value,
+    tool:document.getElementById('m-tool').value,
+    input:S.steps[i].input||'',
+    output:document.getElementById('m-output').value,
+    decision:document.getElementById('m-decision').value,
+  };
+  closeModal();
+  render();
+}
+
+// ===== SCREEN 4: Issues =====
+function s4(){
+  const issueCards = S.issues.map((iss,i)=>`
+    <div class="issue-card">
+      <div class="issue-prob">⚠️ ${esc(iss.problem)||'ยังไม่ได้กรอกปัญหา'}</div>
+      <div class="issue-sol">${esc(iss.solution)||'-'}</div>
+      <div class="issue-actions">
+        <button class="sbtn sbtn-edit" onclick="editIssue(${i})">✏️ แก้ไข</button>
+        ${S.issues.length>1?`<button class="sbtn sbtn-del" onclick="delIssue(${i})">🗑️ ลบ</button>`:''}
+      </div>
+    </div>`).join('');
+
+  return `<div class="card">
+    <div class="card-title">⚠️ ปัญหาที่พบบ่อย</div>
+    <div class="card-sub">ตรวจสอบปัญหาและวิธีแก้ไข เพิ่มหรือแก้ไขได้ตามต้องการ</div>
+    ${issueCards}
+    <button class="add-step-btn" onclick="addIssue()">+ เพิ่มปัญหา</button>
+    <div class="nav">
+      <button class="nav-back" onclick="back()">←</button>
+      <button class="nav-next" onclick="S.screen=5;render()">🎉 สร้าง SOP</button>
+    </div>
+  </div>`;
+}
+
+function editIssue(i){
+  S.editingIssue=i;
+  document.getElementById('m-prob').value=S.issues[i].problem||'';
+  document.getElementById('m-sol').value=S.issues[i].solution||'';
+  document.getElementById('issueModal').classList.add('open');
+}
+function addIssue(){ S.issues.push({problem:'',solution:''}); editIssue(S.issues.length-1); }
+function delIssue(i){ if(confirm('ลบปัญหานี้?')){S.issues.splice(i,1);render();} }
+function closeIssueModal(){ document.getElementById('issueModal').classList.remove('open'); }
+function saveIssue(){
+  S.issues[S.editingIssue]={problem:document.getElementById('m-prob').value,solution:document.getElementById('m-sol').value};
+  closeIssueModal(); render();
+}
+
+// ===== SCREEN 5: Done =====
+function s5(){
+  const dept=DEPTS.find(d=>d.id===S.dept);
+  return `
+    <div class="done-banner">
+      <div class="db-icon">✅</div>
+      <h2>SOP พร้อมแล้ว!</h2>
+      <p>${dept?.icon} ${dept?.name} — ${esc(S.processName)}</p>
+    </div>
+    <div class="action-row">
+      <button class="action-btn ab-save" id="btnSaveLib" onclick="saveToLibrary(event)">📚 บันทึกเข้า SOP Library</button>
+      <button class="action-btn ab-quiz" onclick="showQuiz()">🧠 ทำ Quiz ทบทวน</button>
+      <button class="action-btn ab-print" onclick="saveFile()">💾 บันทึกเป็นไฟล์</button>
+    </div>
+    <div class="sop-preview" id="sopPreview">${buildSOPHTML(dept)}</div>
+    <div id="quizArea"></div>
+    <div class="nav" style="margin-top:20px">
+      <button class="nav-back" onclick="back()">← แก้ไข</button>
+      <button class="nav-next" onclick="resetAll()">🔄 สร้าง SOP ใหม่</button>
+    </div>`;
+}
+
+function buildSOPHTML(dept){
+  const deptLabel = dept?`${dept.icon} ${dept.name}`:'';
+  const steps=S.steps.filter(s=>s.action);
+  const issues=S.issues.filter(i=>i.problem);
+  const tools=S.tools.filter(t=>t);
+  const roles=S.roles.filter(r=>r.role);
+  let h='';
+  h+=`<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px">
+    <div><div style="font-size:.75rem;color:#64748b">${esc(deptLabel)}</div><h1>${esc(S.processName)}</h1></div>
+    <div style="font-size:.78rem;color:#64748b;text-align:right;line-height:1.8">
+      <div>เจ้าของ: ${esc(S.owner)}</div><div>v${esc(S.version)}</div><div>ทบทวน: ${esc(S.reviewFrequency)}</div>
+    </div></div>`;
+  if(S.purpose) h+=`<h2>1. วัตถุประสงค์</h2><p>${esc(S.purpose)}</p>`;
+  if(S.trigger) h+=`<h2>2. เมื่อไหร่ใช้ SOP นี้</h2><p>${esc(S.trigger)}</p>`;
+  if(roles.length) h+=`<h2>3. ผู้เกี่ยวข้อง</h2><table><tr><th>ตำแหน่ง</th><th>หน้าที่</th></tr>${roles.map(r=>`<tr><td><b>${esc(r.role)}</b></td><td>${esc(r.description)}</td></tr>`).join('')}</table>`;
+  if(tools.length) h+=`<h2>4. เครื่องมือ</h2><p>${tools.map(t=>`<span class="ttag">${esc(t)}</span>`).join('')}</p>`;
+  if(steps.length) h+=`<h2>5. ขั้นตอน</h2><table><tr><th>#</th><th>การดำเนินการ</th><th>ผู้รับผิดชอบ</th><th>เครื่องมือ</th><th>Output</th></tr>${steps.map((s,i)=>`<tr><td style="text-align:center;font-weight:800">${i+1}</td><td>${esc(s.action)}${s.decision?`<br><small style="color:#b45309">🔀 ${esc(s.decision)}</small>`:''}</td><td>${esc(s.role)||'-'}</td><td>${esc(s.tool)||'-'}</td><td>${esc(s.output)||'-'}</td></tr>`).join('')}</table>`;
+  if(issues.length) h+=`<h2>6. ปัญหาที่พบบ่อย</h2><table><tr><th>ปัญหา</th><th>วิธีแก้ไข</th></tr>${issues.map(i=>`<tr><td>${esc(i.problem)}</td><td>${esc(i.solution)}</td></tr>`).join('')}</table>`;
+  return h;
+}
+
+// ===== QUIZ =====
+let _qs=[],_ans={},_done=false;
+function showQuiz(){
+  _qs=makeQuiz(); _ans={}; _done=false;
+  if(!_qs.length){document.getElementById('quizArea').innerHTML='<div style="text-align:center;padding:20px;color:#64748b">กรอกข้อมูลขั้นตอนเพิ่มเติมเพื่อสร้าง Quiz</div>';return;}
+  const html=`<div class="quiz-wrap">
+    <div style="font-weight:800;color:#1a2b4a;margin-bottom:14px;font-size:1rem">🧠 Quiz — ${esc(S.processName)}</div>
+    ${_qs.map((q,qi)=>`
+      <div class="qcard">
+        <div class="qnum">ข้อ ${qi+1}/${_qs.length}</div>
+        <div class="qtext">${esc(q.q)}</div>
+        ${q.opts.map((o,oi)=>`<div class="qopt" id="o-${qi}-${oi}" onclick="pickQ(${qi},'${String(o).replace(/'/g,"\\'").replace(/\n/g,' ')}',${oi},${q.opts.length})">
+          <input type="radio" name="q${qi}"> <span>${esc(String(o))}</span>
+        </div>`).join('')}
+      </div>`).join('')}
+    <button class="submit-quiz-btn" onclick="subQuiz()">✅ ส่งคำตอบ</button>
+    <div id="qResult"></div>
+  </div>`;
+  document.getElementById('quizArea').innerHTML=html;
+  document.getElementById('quizArea').scrollIntoView({behavior:'smooth'});
+}
+
+function makeQuiz(){
+  const qs=[];
+  const steps=S.steps.filter(s=>s.action);
+  const issues=S.issues.filter(i=>i.problem&&i.solution);
+  function sh(a){return[...a].sort(()=>Math.random()-.5)}
+  function p4(c,pool,f){var w=sh([...pool,...f]).filter(x=>String(x)!==String(c)).slice(0,3);return sh([c,...w])}
+  if(S.purpose) qs.push({q:`SOP "${S.processName}" ทำขึ้นเพื่ออะไร?`,c:S.purpose.substring(0,80),opts:p4(S.purpose.substring(0,80),[],['เพื่อลดต้นทุน','เพื่อเพิ่มยอดขาย','เพื่อปรับโครงสร้างองค์กร'])});
+  if(S.trigger) qs.push({q:`เมื่อไหร่ถึงจะต้องเริ่มใช้ SOP นี้?`,c:S.trigger,opts:p4(S.trigger,[],['เมื่อสิ้นเดือน','เมื่อมีการประชุม','เมื่อผู้บริหารสั่ง'])});
+  if(steps.length>=2) qs.push({q:`ขั้นตอนแรกของ "${S.processName}" คืออะไร?`,c:steps[0].action,opts:p4(steps[0].action,steps.slice(1).map(s=>s.action),['รอการอนุมัติ','ส่งรายงาน'])});
+  const sr=steps.filter(s=>s.role);
+  if(sr.length&&S.roles.filter(r=>r.role).length>=2) qs.push({q:`ใครรับผิดชอบขั้นตอน "${sr[0].action}"?`,c:sr[0].role,opts:p4(sr[0].role,S.roles.map(r=>r.role),['CEO','IT Support'])});
+  if(steps.length>1) qs.push({q:`"${S.processName}" มีขั้นตอนทั้งหมดกี่ขั้นตอน?`,c:steps.length,opts:sh([...new Set([steps.length,steps.length+1,Math.max(1,steps.length-1),steps.length+2])].slice(0,4))});
+  if(issues.length) qs.push({q:`เมื่อเกิดปัญหา "${issues[0].problem}" ควรทำอย่างไร?`,c:issues[0].solution,opts:p4(issues[0].solution,issues.slice(1).map(i=>i.solution),['รอให้หัวหน้าแก้','ปิดระบบและรีสตาร์ท'])});
+  return qs.slice(0,6);
+}
+
+function pickQ(qi,ans,oi,total){
+  if(_done)return;
+  _ans[qi]=String(ans);
+  for(var i=0;i<total;i++){var el=document.getElementById('o-'+qi+'-'+i);if(el)el.style.background=i===oi?'#dbeafe':'';}
+}
+function subQuiz(){
+  if(_done)return;_done=true;
+  var ok=0;
+  _qs.forEach(function(q,qi){
+    var ua=_ans[qi],ca=String(q.c),cor=ua===ca;
+    if(cor)ok++;
+    q.opts.forEach(function(opt,oi){
+      var el=document.getElementById('o-'+qi+'-'+oi);if(!el)return;
+      if(String(opt)===ca)el.classList.add('correct');
+      else if(String(opt)===ua&&!cor)el.classList.add('wrong');
+    });
+  });
+  var pct=Math.round(ok/_qs.length*100);
+  document.getElementById('qResult').innerHTML=`<div class="score-box"><div style="font-size:3rem">${pct>=80?'🎉':pct>=60?'👍':'📚'}</div><div class="score-big">${ok}/${_qs.length} (${pct}%)</div><div style="color:#374151;margin-top:8px">${pct>=80?'ยอดเยี่ยม!':pct>=60?'ผ่านเกณฑ์ ทบทวนบางส่วนเพิ่ม':'ควรศึกษา SOP อีกครั้ง'}</div></div>`;
+}
+
+// ===== SAVE TO LIBRARY (Supabase) =====
+async function saveToLibrary(e){
+  const dept=DEPTS.find(d=>d.id===S.dept);
+  const sopData={
+    department:S.dept,departmentName:dept?.name||'',departmentIcon:dept?.icon||'📋',
+    processName:S.processName,processOwner:S.owner,version:S.version,
+    effectiveDate:S.effectiveDate,reviewFrequency:S.reviewFrequency,
+    purpose:S.purpose,scope:S.scope,trigger:S.trigger,
+    roles:S.roles,tools:S.tools,steps:S.steps,issues:S.issues,
+    relatedDocs:S.relatedDocs,exportedAt:new Date().toISOString(),
+  };
+  const btn=document.getElementById('btnSaveLib');
+  const orig=btn?btn.textContent:'';
+  try{
+    if(btn){btn.textContent='⏳ กำลังบันทึก...';btn.disabled=true;}
+    // Fetch current sops array, update, save back
+    var res=await sb.from('app_data').select('value').eq('key','sops').maybeSingle();
+    var sops=res.data&&Array.isArray(res.data.value)?res.data.value:[];
+    var idx=sops.findIndex(function(s){return s.processName===sopData.processName&&s.department===sopData.department;});
+    if(idx>=0)sops[idx]=sopData; else sops.push(sopData);
+    var upsertRes=await sb.from('app_data').upsert({key:'sops',value:sops,updated_at:new Date().toISOString()});
+    if(upsertRes.error)throw upsertRes.error;
+    if(btn){btn.textContent='✅ บันทึกแล้ว!';btn.style.background='#047857';btn.disabled=false;
+      setTimeout(()=>{btn.textContent=orig;btn.style.background='';},2500);}
+  }catch(err){
+    if(btn){btn.textContent='❌ บันทึกไม่สำเร็จ';btn.style.background='#dc2626';btn.disabled=false;
+      setTimeout(()=>{btn.textContent=orig;btn.style.background='';},3000);}
+    alert('เกิดข้อผิดพลาด: '+err.message);
+  }
+}
+
+// ===== SAVE FILE =====
+function saveFile(){
+  const dept=DEPTS.find(d=>d.id===S.dept);
+  const name=(S.processName||'SOP').replace(/[^a-zA-Zก-๙0-9]/g,'-');
+  const fname=`SOP-${(dept?.name||'').replace(/\s/g,'-')}-${name}.html`;
+  const json=JSON.stringify({
+    department:S.dept,departmentName:dept?.name||'',departmentIcon:dept?.icon||'📋',
+    processName:S.processName,processOwner:S.owner,version:S.version,
+    effectiveDate:S.effectiveDate,reviewFrequency:S.reviewFrequency,
+    purpose:S.purpose,scope:S.scope,trigger:S.trigger,
+    roles:S.roles,tools:S.tools,steps:S.steps,issues:S.issues,relatedDocs:S.relatedDocs,
+    exportedAt:new Date().toISOString(),
+  });
+  const sopHTML=buildSOPHTML(dept);
+  const html=`<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8"><title>${esc(S.processName)} — SOP VRSteel</title>
+<script id="sop-data" type="application/json">${json.replace(/<\//g,'<\\/')}<\/script>
+<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:'Segoe UI',sans-serif;background:#f5f7fa;padding:24px;color:#1e293b}.wrap{max-width:800px;margin:0 auto}.hdr{background:linear-gradient(135deg,#1a2b4a,#2d4a7a);color:white;padding:18px 22px;border-radius:12px;margin-bottom:20px}.hdr h1{font-size:1.1rem;font-weight:800}.hdr p{font-size:.82rem;opacity:.75;margin-top:2px}.card{background:white;border-radius:12px;padding:24px;box-shadow:0 2px 8px rgba(0,0,0,.08)}h1{font-size:1.1rem;color:#1a2b4a;border-bottom:2px solid #1a2b4a;padding-bottom:8px;margin-bottom:14px}h2{font-size:.9rem;font-weight:800;color:#1e40af;background:#eff6ff;padding:5px 10px;border-radius:4px;margin-top:16px;margin-bottom:8px;border-left:3px solid #2563eb}p{color:#374151;font-size:.88rem;line-height:1.6}table{width:100%;border-collapse:collapse;font-size:.82rem;margin-top:6px}th{background:#1a2b4a;color:white;padding:7px 8px;text-align:left}td{border:1px solid #e2e8f0;padding:7px 8px;vertical-align:top}tr:nth-child(even) td{background:#f8fafc}.ttag{display:inline-block;background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0;border-radius:20px;padding:2px 8px;font-size:.75rem;margin:2px}.btn{display:inline-block;background:#1a2b4a;color:white;padding:10px 20px;border-radius:8px;border:none;cursor:pointer;font-size:.9rem;font-weight:700;margin-right:8px;margin-bottom:12px;font-family:inherit}@media print{.no-print{display:none!important}}</style>
+</head><body><div class="wrap">
+<div class="hdr"><h1>📋 SOP — VRSteel</h1><p>${esc(dept?.icon||'')} ${esc(dept?.name||'')} | ${esc(S.processName)}</p></div>
+<div class="no-print" style="margin-bottom:16px"><button class="btn" onclick="window.print()">🖨️ Print / PDF</button></div>
+<div class="card">${sopHTML}</div>
+</div></body></html>`;
+  const blob=new Blob([html],{type:'text/html;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download=fname;
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// ===== NAVIGATION =====
+function back(){
+  if(S.screen>0){S.screen--;render();}
+}
+
+function resetAll(){
+  Object.assign(S,{screen:0,dept:null,tpl:null,processName:'',owner:'',purpose:'',scope:'',trigger:'',
+    roles:[],tools:[],steps:[],issues:[],editingStep:-1,editingIssue:-1});
+  render();
+}
+
+// ===== MAIN RENDER =====
+const screens=[s0,s1,s2,s3,s4,s5];
+function render(){
+  renderDots();
+  document.getElementById('screen').innerHTML=screens[S.screen]();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// Load master data from Supabase then render
+loadMasterFromSupabase().then(function(){render();});
+</script>
+</body>
+</html>
