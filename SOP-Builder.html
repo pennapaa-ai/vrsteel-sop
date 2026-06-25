@@ -186,10 +186,17 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // Default master data (fallback if Supabase not configured yet)
-var DEFAULT_ROLES=['Sales Officer','Sales Manager','IT Officer','IT Manager','HR Officer','HR Manager',
-  'Accounting Officer','Accounting Manager','Logistic Officer','Logistic Manager',
-  'Warehouse Officer','Warehouse Manager','QC Officer','Graphic Designer','Graphic Design Lead',
-  'Department Manager','พนักงานขับรถ'];
+var DEFAULT_ROLES=[
+  {name:'Sales Officer',dept:'sales'},{name:'Sales Manager',dept:'sales'},
+  {name:'IT Officer',dept:'it'},{name:'IT Manager',dept:'it'},
+  {name:'HR Officer',dept:'hr'},{name:'HR Manager',dept:'hr'},
+  {name:'Accounting Officer',dept:'accounting'},{name:'Accounting Manager',dept:'accounting'},
+  {name:'Logistic Officer',dept:'logistic'},{name:'Logistic Manager',dept:'logistic'},
+  {name:'Warehouse Officer',dept:'warehouse'},{name:'Warehouse Manager',dept:'warehouse'},
+  {name:'QC Officer',dept:'warehouse'},
+  {name:'Graphic Designer',dept:'graphic'},{name:'Graphic Design Lead',dept:'graphic'},
+  {name:'Department Manager',dept:'general'},{name:'พนักงานขับรถ',dept:'logistic'},
+];
 var DEFAULT_TOOLS=['Bplus ERP','Line','Microsoft Excel','Email','Google Maps','Remote Desktop',
   'Adobe Illustrator','Google Drive','เครื่องชั่งน้ำหนัก','เทปวัด'];
 
@@ -745,8 +752,8 @@ function s3(){
 }
 
 function getMasterRoles(){
-  if(_masterRolesCache) return _masterRolesCache;
-  return DEFAULT_ROLES.slice();
+  var src=_masterRolesCache||DEFAULT_ROLES;
+  return src.map(function(r){return typeof r==='string'?r:r.name;});
 }
 function getMasterTools(){
   if(_masterToolsCache) return _masterToolsCache;
