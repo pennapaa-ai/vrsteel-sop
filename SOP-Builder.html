@@ -203,6 +203,7 @@ var DEFAULT_TOOLS=['Bplus ERP','Line','Microsoft Excel','Email','Google Maps','R
 // Cache master data in memory
 var _masterRolesCache = null;
 var _masterToolsCache = null;
+var _masterDeptsCache = null;
 
 async function loadMasterFromSupabase(){
   try{
@@ -210,6 +211,8 @@ async function loadMasterFromSupabase(){
     if(res.data && Array.isArray(res.data.value)) _masterRolesCache = res.data.value;
     var res2 = await sb.from('app_data').select('value').eq('key','master_tools').maybeSingle();
     if(res2.data && Array.isArray(res2.data.value)) _masterToolsCache = res2.data.value;
+    var res3 = await sb.from('app_data').select('value').eq('key','departments').maybeSingle();
+    if(res3.data && Array.isArray(res3.data.value)) _masterDeptsCache = res3.data.value;
   }catch(e){ console.warn('Could not load master data:', e); }
 }
 
@@ -217,15 +220,24 @@ async function loadMasterFromSupabase(){
 const COMPANY = 'VRSteel';
 
 // ===== DEPARTMENTS =====
-const DEPTS = [
-  {id:'sales',name:'Sales & Marketing',icon:'📊'},
-  {id:'it',name:'IT',icon:'💻'},
-  {id:'hr',name:'HR',icon:'👥'},
-  {id:'accounting',name:'Accounting',icon:'🧾'},
-  {id:'logistic',name:'Logistic',icon:'🚚'},
-  {id:'warehouse',name:'Warehouse',icon:'📦'},
-  {id:'graphic',name:'Graphic Design',icon:'🎨'},
+var DEFAULT_DEPTS=[
+  {id:'sales',label:'Sales & Marketing',icon:'📊'},
+  {id:'it',label:'IT',icon:'💻'},
+  {id:'hr',label:'HR',icon:'👥'},
+  {id:'accounting',label:'Accounting',icon:'🧾'},
+  {id:'logistic',label:'Logistic',icon:'🚚'},
+  {id:'warehouse',label:'Warehouse',icon:'📦'},
+  {id:'graphic',label:'Graphic Design',icon:'🎨'},
+  {id:'general',label:'ทั่วไป',icon:'🏢'},
 ];
+function getDepts(){
+  var src=_masterDeptsCache||DEFAULT_DEPTS;
+  // normalise: Library uses {id,label,icon}, Builder DEFAULT_DEPTS also uses label
+  return src.map(function(d){return {id:d.id,name:d.label||d.name||d.id,icon:d.icon||'🏢'};});
+}
+// keep DEPTS as a computed getter for backward compat with TPL lookups
+var DEPTS={find:function(fn){return getDepts().find(fn);}};
+function getDeptsArray(){return getDepts();}
 
 // ===== PROCESS TEMPLATES =====
 const TPL = {
@@ -614,7 +626,7 @@ function s0(){
     <div class="card-title">เลือกแผนกของคุณ</div>
     <div class="card-sub">กดเลือกแผนกที่คุณต้องการสร้าง SOP</div>
     <div class="dept-grid">
-      ${DEPTS.map(d=>`
+      ${getDeptsArray().map(d=>`
         <div class="dept-btn ${S.dept===d.id?'sel':''}" onclick="selDept('${d.id}')">
           <div class="di">${d.icon}</div>
           <div class="dn">${d.name}</div>
