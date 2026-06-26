@@ -643,9 +643,12 @@ function next0(){
 }
 
 // ===== SCREEN 1: Process Selection =====
+var CUSTOM_TPL={id:'custom',name:'กำหนด Process เอง',icon:'✏️',desc:'สร้าง SOP แบบกำหนดเองตั้งแต่ต้น',custom:true};
 function s1(){
   const d = DEPTS.find(x=>x.id===S.dept);
-  const procs = TPL[S.dept]||[];
+  // base templates for this dept (excluding any embedded custom), then always add custom at end
+  var baseProcs=(TPL[S.dept]||[]).filter(function(p){return !p.custom;});
+  var procs=baseProcs.concat([CUSTOM_TPL]);
   return `<div class="card">
     <div class="card-title">${d.icon} ${d.name}</div>
     <div class="card-sub">เลือก Process ที่ต้องการสร้าง SOP หรือกำหนดเอง</div>
@@ -664,6 +667,7 @@ function s1(){
 }
 
 function selProc(id){
+  if(id==='custom'){S.tpl=CUSTOM_TPL;render();return;}
   const procs = TPL[S.dept]||[];
   S.tpl = procs.find(p=>p.id===id)||null;
   render();
